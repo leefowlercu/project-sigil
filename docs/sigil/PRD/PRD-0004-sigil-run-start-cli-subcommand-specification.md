@@ -47,11 +47,17 @@ behavior for command initialization.
 
 ## Validation and Error Contract
 
-- Each resolved configuration path MUST exist.
-- Each resolved configuration path MUST be a readable regular file (not a
-  directory).
-- If either resolved path is missing, unreadable, or not a regular file,
-  `sigil run start` MUST fail with non-zero exit.
+- The resolved application configuration path MUST exist.
+- The resolved application configuration path MUST be a readable regular file
+  (not a directory).
+- The resolved run configuration path MUST be a readable regular file when
+  `--run-config` is explicitly provided.
+- When `--run-config` is omitted, a missing default `./sigil-run.yaml` MUST be
+  allowed as long as run configuration merge and validation rules still pass.
+- If the resolved application configuration path is missing, unreadable, or not
+  a regular file, `sigil run start` MUST fail with non-zero exit.
+- If an explicitly provided `--run-config` path is missing, unreadable, or not
+  a regular file, `sigil run start` MUST fail with non-zero exit.
 - Unknown or unsupported flags SHOULD follow Cobra default behavior and SHOULD
   exit non-zero.
 
@@ -95,10 +101,12 @@ When configuration paths are resolved
 Then the application config path uses `<app-path>` and the run config path uses
 `<run-path>`.
 
-### Scenario SCN-0004: Fails when a resolved configuration path is missing or not a readable file
+### Scenario SCN-0004: Fails when required configuration paths are missing unreadable or not regular files
 
-Given any resolved application or run configuration path is missing, unreadable,
-or not a regular file  
+Given a resolved application configuration path is missing unreadable or not a
+regular file  
+Or an explicitly provided run configuration path is missing unreadable or not a
+regular file  
 When `sigil run start` initializes command inputs  
 Then command initialization fails with non-zero exit  
 And unknown or unsupported flags use framework-default Cobra error behavior.
