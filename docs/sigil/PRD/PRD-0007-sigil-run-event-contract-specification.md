@@ -115,7 +115,7 @@ Additional invariants:
 | --- | --- | --- | --- |
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
-| `output_ref` | No | string | Non-empty when present |
+| `output_ref` | No | string | Non-empty when present; SHOULD reference persisted normalized inference output with `schema_id=sigil.rlm.response.v1` |
 
 ### `run.completed` payload schema
 
@@ -123,7 +123,7 @@ Additional invariants:
 | --- | --- | --- | --- |
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
-| `final_answer_ref` | No | string | Non-empty when present |
+| `final_answer_ref` | No | string | Non-empty when present; SHOULD reference terminal normalized inference output with `schema_id=sigil.rlm.response.v1` and `validated_payload.decision=final` |
 
 ### `run.failed` payload schema
 

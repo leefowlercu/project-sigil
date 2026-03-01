@@ -24,9 +24,11 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil run lifecycle state machine contract
 - [`PRD-0007-sigil-run-event-contract-specification.md`](PRD-0007-sigil-run-event-contract-specification.md):
   Sigil run event envelope and durable storage contract
+- [`PRD-0008-sigil-llm-inference-via-gateway-specification.md`](PRD-0008-sigil-llm-inference-via-gateway-specification.md):
+  Sigil LLM inference via gateway contract
 
 ## Next PRD
 
 Create the next record as:
 
-- `docs/sigil/PRD/PRD-0008-<slug>-specification.md`
+- `docs/sigil/PRD/PRD-0009-<slug>-specification.md`

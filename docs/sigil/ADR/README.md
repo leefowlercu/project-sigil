@@ -19,9 +19,13 @@ This directory stores architecture decision records for the `sigil` subproject.
   Use event-sourced architecture for sigil run runtime state
 - [`ADR-0006-sigil-run-node-identity-model.md`](ADR-0006-sigil-run-node-identity-model.md):
   Define sigil run/node identity model
+- [`ADR-0007-sigil-llm-gateway-abstraction.md`](ADR-0007-sigil-llm-gateway-abstraction.md):
+  Define gateway abstraction pattern for sigil inference
+- [`ADR-0008-sigil-openrouter-responses-gateway.md`](ADR-0008-sigil-openrouter-responses-gateway.md):
+  Define OpenRouter Responses API as sigil v1 inference gateway
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0007-<slug>.md`
+- `docs/sigil/ADR/ADR-0009-<slug>.md`

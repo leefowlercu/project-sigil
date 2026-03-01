@@ -12,6 +12,8 @@ Accepted
 - Runtime environment variable overrides.
 - Typed configuration structures that map nested YAML keys to nested structs.
 - Explicit validation for mutually exclusive and required key relationships.
+- Deterministic inference provider/model/reasoning constraints for gateway-based
+  inference.
 
 This PRD defines the run-configuration behavioral contract for how
 configuration is loaded, merged, and validated for run execution.
@@ -22,8 +24,8 @@ configuration is loaded, merged, and validated for run execution.
 - Define run configuration default values and required fields.
 - Define merge precedence between defaults, file values, and environment
   overrides for run configuration.
-- Define validation rules for mutually exclusive fields and gateway-specific
-  requirements in run configuration.
+- Define validation rules for mutually exclusive fields, gateway constraints,
+  provider/model allow-lists, and reasoning configuration.
 - Provide acceptance scenarios that can map directly to submodule acceptance
   coverage.
 
@@ -62,6 +64,9 @@ llm:
   provider: <string>
   model: <string>
   gateway: <string>
+  reasoning:
+    enabled: <bool>
+    effort: <string>
   openrouter:
     base_url: <string>
     request_timeout_ms: <int>
@@ -81,6 +86,8 @@ rlm:
 - `context`: no default
 - `context_template`: no default
 - `llm.gateway`: `openrouter`
+- `llm.reasoning.enabled`: `true`
+- `llm.reasoning.effort`: `medium`
 - `llm.openrouter.base_url`: `https://openrouter.ai/api/v1`
 - `llm.openrouter.request_timeout_ms`: `30000`
 - `llm.openrouter.api_key_env`: `OPENROUTER_API_KEY`
@@ -96,6 +103,31 @@ rlm:
 - `llm.gateway` MUST be `openrouter` in this initial release.
 - `llm.openrouter` MAY be omitted when `llm.gateway` is `openrouter`; effective
   OpenRouter fields MUST resolve from merge precedence (`env > file > defaults`).
+- `llm.provider` MUST be one of:
+  - `openai`
+  - `anthropic`
+- If `llm.provider=openai`, `llm.model` MUST be one of:
+  - `gpt-5.1`
+  - `gpt-5.1-codex-max`
+  - `gpt-5.2`
+  - `gpt-5.2-pro`
+  - `gpt-5.2-codex`
+  - `gpt-5.3-codex`
+- If `llm.provider=anthropic`, `llm.model` MUST be one of:
+  - `claude-sonnet-4`
+  - `claude-opus-4`
+  - `claude-sonnet-4.5`
+  - `claude-haiku-4.5`
+  - `claude-opus-4.5`
+  - `claude-sonnet-4.6`
+  - `claude-opus-4.6`
+- `llm.reasoning.effort` MUST be one of:
+  - `minimal`
+  - `low`
+  - `medium`
+  - `high`
+- If `llm.reasoning.enabled=false`, `llm.reasoning.effort` MAY be present and
+  is ignored for inference request construction.
 
 ## Environment Override Contract
 
@@ -110,6 +142,8 @@ The following environment variables are representative contract examples:
 - `SIGIL_RUN_LLM_PROVIDER`
 - `SIGIL_RUN_LLM_MODEL`
 - `SIGIL_RUN_LLM_GATEWAY`
+- `SIGIL_RUN_LLM_REASONING_ENABLED`
+- `SIGIL_RUN_LLM_REASONING_EFFORT`
 - `SIGIL_RUN_LLM_OPENROUTER_BASE_URL`
 - `SIGIL_RUN_LLM_OPENROUTER_REQUEST_TIMEOUT_MS`
 - `SIGIL_RUN_LLM_OPENROUTER_API_KEY_ENV`
@@ -204,3 +238,54 @@ Given `sigil-run.yaml` is missing and required fields are set via
 `SIGIL_RUN_*` environment variables  
 When run configuration initializes  
 Then merged run configuration is valid and initialization succeeds.
+
+### Scenario SCN-0011: Accepts llm.provider only when value is openai or anthropic
+
+Given merged run configuration with `llm.provider` set  
+When validation runs  
+Then validation succeeds only for `openai` or `anthropic`.
+
+### Scenario SCN-0012: Validates llm.model against allowed list for provider openai
+
+Given merged run configuration with `llm.provider=openai`  
+When validation runs  
+Then `llm.model` must be in the allowed OpenAI model set.
+
+### Scenario SCN-0013: Validates llm.model against allowed list for provider anthropic
+
+Given merged run configuration with `llm.provider=anthropic`  
+When validation runs  
+Then `llm.model` must be in the allowed Anthropic model set.
+
+### Scenario SCN-0014: Rejects run configuration when llm.model is not allowed for selected llm.provider
+
+Given merged run configuration with provider/model pair outside allowed mapping  
+When validation runs  
+Then initialization fails with unsupported provider-model validation error.
+
+### Scenario SCN-0015: Applies default reasoning config values when llm.reasoning block is omitted
+
+Given merged run configuration omits `llm.reasoning` block  
+When defaults are applied  
+Then `llm.reasoning.enabled=true` and `llm.reasoning.effort=medium`.
+
+### Scenario SCN-0016: Accepts llm.reasoning.effort only when value is minimal low medium or high
+
+Given merged run configuration with `llm.reasoning.effort` set  
+When validation runs  
+Then validation succeeds only for `minimal`, `low`, `medium`, or `high`.
+
+### Scenario SCN-0017: Allows reasoning effort to be present and ignored when llm.reasoning.enabled is false
+
+Given merged run configuration where `llm.reasoning.enabled=false` and effort is
+set  
+When validation and request-construction semantics are applied  
+Then configuration is valid and effort is ignored for inference request
+construction.
+
+### Scenario SCN-0018: Applies SIGIL_RUN environment overrides for llm.reasoning.enabled and llm.reasoning.effort
+
+Given run configuration values and corresponding reasoning environment variables  
+When merge precedence is applied  
+Then `SIGIL_RUN_LLM_REASONING_ENABLED` and
+`SIGIL_RUN_LLM_REASONING_EFFORT` override file/default values.
