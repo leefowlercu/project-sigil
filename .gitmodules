@@ -1,0 +1,6 @@
+[submodule "sigil"]
+	path = sigil
+	url = https://github.com/leefowlercu/sigil.git
+[submodule "sigil-web"]
+	path = sigil-web
+	url = https://github.com/leefowlercu/sigil-web.git
