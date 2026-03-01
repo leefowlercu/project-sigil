@@ -45,7 +45,9 @@ sigil
 
 - `sigil` MUST print usage/help and perform no runtime action.
 - `sigil run` MUST print usage/help and perform no runtime action.
-- `sigil run start` MUST print usage/help as a usage-only placeholder command.
+- `sigil run start` behavior is superseded by
+  `PRD-0004-sigil-run-start-cli-subcommand-specification.md` and MUST follow the
+  run-start config-input contract defined there.
 - `sigil run stop` MUST print usage/help as a usage-only placeholder command.
 - No positional arguments or required flags are defined in this PRD.
 
@@ -53,7 +55,8 @@ sigil
 
 - `sigil` with no subcommand MUST exit with status code `0`.
 - `sigil run` with no subcommand MUST exit with status code `0`.
-- `sigil run start` usage-only behavior MUST exit with status code `0`.
+- `sigil run start` exit behavior is defined by
+  `PRD-0004-sigil-run-start-cli-subcommand-specification.md`.
 - `sigil run stop` usage-only behavior MUST exit with status code `0`.
 
 ## Error Handling Contract
@@ -92,11 +95,13 @@ When a user runs `sigil run`
 Then run-subcommand usage/help is printed and the process exits with status
 code `0`.
 
-### Scenario SCN-0003: Provides sigil run start as a usage-only placeholder command
+### Scenario SCN-0003: Defers sigil run start behavior to PRD-0004 run-start config-input contract
 
 Given the `sigil` executable is available  
 When a user runs `sigil run start`  
-Then usage/help is printed and the process exits with status code `0`.
+Then `sigil run start` behavior follows
+`PRD-0004-sigil-run-start-cli-subcommand-specification.md`, replacing usage-only
+placeholder semantics.
 
 ### Scenario SCN-0004: Provides sigil run stop as a usage-only placeholder command
 
