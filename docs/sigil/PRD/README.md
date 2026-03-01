@@ -20,9 +20,13 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil run start CLI subcommand contract
 - [`PRD-0005-sigil-application-logging-specification.md`](PRD-0005-sigil-application-logging-specification.md):
   Sigil application logging contract
+- [`PRD-0006-sigil-run-lifecycle-state-machine-specification.md`](PRD-0006-sigil-run-lifecycle-state-machine-specification.md):
+  Sigil run lifecycle state machine contract
+- [`PRD-0007-sigil-run-event-contract-specification.md`](PRD-0007-sigil-run-event-contract-specification.md):
+  Sigil run event envelope and durable storage contract
 
 ## Next PRD
 
 Create the next record as:
 
-- `docs/sigil/PRD/PRD-0006-<slug>-specification.md`
+- `docs/sigil/PRD/PRD-0008-<slug>-specification.md`

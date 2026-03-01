@@ -15,9 +15,13 @@ This directory stores architecture decision records for the `sigil` subproject.
   Use Godog for BDD acceptance testing
 - [`ADR-0004-slog-structured-json-file-logging.md`](ADR-0004-slog-structured-json-file-logging.md):
   Use slog for structured JSON file logging
+- [`ADR-0005-sigil-event-sourced-run-architecture.md`](ADR-0005-sigil-event-sourced-run-architecture.md):
+  Use event-sourced architecture for sigil run runtime state
+- [`ADR-0006-sigil-run-node-identity-model.md`](ADR-0006-sigil-run-node-identity-model.md):
+  Define sigil run/node identity model
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0005-<slug>.md`
+- `docs/sigil/ADR/ADR-0007-<slug>.md`
