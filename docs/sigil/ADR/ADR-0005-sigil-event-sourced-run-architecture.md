@@ -32,7 +32,7 @@ per-run events are the source of truth.
 - Projections/read models MUST be derived from events and are not source of
   truth.
 - v1 durable store default MUST be JSONL in a per-run directory under
-  `./sigil/runs`.
+  `./.sigil/runs`.
 - Event ordering MUST rely on per-run contiguous `seq` values.
 - Query/app-server contracts are deferred to future PRDs and are not specified
   by this ADR.

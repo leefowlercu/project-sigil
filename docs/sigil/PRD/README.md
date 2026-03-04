@@ -26,9 +26,21 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil run event envelope and durable storage contract
 - [`PRD-0008-sigil-llm-inference-via-gateway-specification.md`](PRD-0008-sigil-llm-inference-via-gateway-specification.md):
   Sigil LLM inference via gateway contract
+- [`PRD-0009-sigil-rlm-core-harness-mechanism-specification.md`](PRD-0009-sigil-rlm-core-harness-mechanism-specification.md):
+  Sigil RLM core harness mechanism contract
+- [`PRD-0010-sigil-go-repl-runtime-specification.md`](PRD-0010-sigil-go-repl-runtime-specification.md):
+  Sigil Go REPL runtime contract
+- [`PRD-0011-sigil-run-start-harness-execution-specification.md`](PRD-0011-sigil-run-start-harness-execution-specification.md):
+  Sigil run start harness execution contract
+- [`PRD-0012-sigil-harness-model-input-boundary-specification.md`](PRD-0012-sigil-harness-model-input-boundary-specification.md):
+  Sigil harness model-input boundary contract
+- [`PRD-0013-sigil-repl-subcall-apis-and-batching-specification.md`](PRD-0013-sigil-repl-subcall-apis-and-batching-specification.md):
+  Sigil REPL subcall APIs batching and observability contract
+- [`PRD-0014-sigil-structured-output-verifiability-and-prompt-schema-synchronization-specification.md`](PRD-0014-sigil-structured-output-verifiability-and-prompt-schema-synchronization-specification.md):
+  Sigil structured output verifiability and runtime prompt-schema synchronization contract
 
 ## Next PRD
 
 Create the next record as:
 
-- `docs/sigil/PRD/PRD-0009-<slug>-specification.md`
+- `docs/sigil/PRD/PRD-0015-<slug>-specification.md`

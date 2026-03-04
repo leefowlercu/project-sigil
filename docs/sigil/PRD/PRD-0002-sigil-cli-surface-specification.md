@@ -7,11 +7,10 @@ Accepted
 ## Context
 
 `sigil` requires a stable initial command-line surface so users and downstream
-integrations can discover command structure before run lifecycle behavior is
-implemented.
+integrations can discover command structure while run lifecycle behavior evolves.
 
-This PRD defines the initial external CLI contract and usage behavior for the
-first command tree.
+This PRD defines the external CLI command tree contract and usage behavior for
+the root and parent command surface.
 
 ## Goals
 
@@ -22,7 +21,8 @@ first command tree.
 
 ## Non-Goals
 
-- Defining run lifecycle execution behavior for `run start` or `run stop`.
+- Defining run lifecycle execution behavior internals for `run start` or
+  `run stop`.
 - Defining `run stop --run-id` or any required flag contract.
 - Defining custom error strings beyond Cobra default behavior.
 
@@ -45,9 +45,8 @@ sigil
 
 - `sigil` MUST print usage/help and perform no runtime action.
 - `sigil run` MUST print usage/help and perform no runtime action.
-- `sigil run start` behavior is superseded by
-  `PRD-0004-sigil-run-start-cli-subcommand-specification.md` and MUST follow the
-  run-start config-input contract defined there.
+- `sigil run start` behavior is delegated to
+  `PRD-0011-sigil-run-start-harness-execution-specification.md`.
 - `sigil run stop` MUST print usage/help as a usage-only placeholder command.
 - No positional arguments or required flags are defined in this PRD.
 
@@ -56,7 +55,7 @@ sigil
 - `sigil` with no subcommand MUST exit with status code `0`.
 - `sigil run` with no subcommand MUST exit with status code `0`.
 - `sigil run start` exit behavior is defined by
-  `PRD-0004-sigil-run-start-cli-subcommand-specification.md`.
+  `PRD-0011-sigil-run-start-harness-execution-specification.md`.
 - `sigil run stop` usage-only behavior MUST exit with status code `0`.
 
 ## Error Handling Contract
@@ -70,8 +69,8 @@ sigil
 
 The following are explicitly deferred to a future PRD:
 
-- Runtime behavior for starting a run (`sigil run start`).
 - Runtime behavior for stopping an in-progress run (`sigil run stop`).
+- Run stop lifecycle and interruption semantics.
 - Any `run stop --run-id` flag schema, requiredness, and validation rules.
 
 ## Acceptance Scenarios
@@ -95,13 +94,12 @@ When a user runs `sigil run`
 Then run-subcommand usage/help is printed and the process exits with status
 code `0`.
 
-### Scenario SCN-0003: Defers sigil run start behavior to PRD-0004 run-start config-input contract
+### Scenario SCN-0003: Delegates sigil run start behavior to PRD-0011 run-start harness-execution contract
 
 Given the `sigil` executable is available  
 When a user runs `sigil run start`  
 Then `sigil run start` behavior follows
-`PRD-0004-sigil-run-start-cli-subcommand-specification.md`, replacing usage-only
-placeholder semantics.
+`PRD-0011-sigil-run-start-harness-execution-specification.md`.
 
 ### Scenario SCN-0004: Provides sigil run stop as a usage-only placeholder command
 

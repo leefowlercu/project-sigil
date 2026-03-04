@@ -23,9 +23,19 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define gateway abstraction pattern for sigil inference
 - [`ADR-0008-sigil-openrouter-responses-gateway.md`](ADR-0008-sigil-openrouter-responses-gateway.md):
   Define OpenRouter Responses API as sigil v1 inference gateway
+- [`ADR-0009-sigil-go-repl-engine-and-runtime-boundary.md`](ADR-0009-sigil-go-repl-engine-and-runtime-boundary.md):
+  Define Go REPL engine architecture and runtime boundary for sigil v1
+- [`ADR-0010-sigil-run-start-blocking-harness-entrypoint.md`](ADR-0010-sigil-run-start-blocking-harness-entrypoint.md):
+  Define sigil run start as synchronous harness execution entrypoint
+- [`ADR-0011-sigil-harness-model-input-boundary-and-message-contract.md`](ADR-0011-sigil-harness-model-input-boundary-and-message-contract.md):
+  Define harness model-input boundary and message contract for bounded step input
+- [`ADR-0012-sigil-repl-subcall-modes-batching-and-observability.md`](ADR-0012-sigil-repl-subcall-modes-batching-and-observability.md):
+  Define REPL subcall API modes, batching behavior, and subcall observability contracts
+- [`ADR-0013-sigil-structured-output-verifiability-and-prompt-schema-sync.md`](ADR-0013-sigil-structured-output-verifiability-and-prompt-schema-sync.md):
+  Define enriched structured-output verifiability and runtime prompt-schema synchronization
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0009-<slug>.md`
+- `docs/sigil/ADR/ADR-0014-<slug>.md`

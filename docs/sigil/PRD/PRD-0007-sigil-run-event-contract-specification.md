@@ -16,7 +16,7 @@ behavior is deferred.
 ## Goals
 
 - Define the required event envelope for v1.
-- Define canonical core lifecycle event types for v1.
+- Define canonical runtime event types for v1.
 - Define strict per-event payload schemas and invariants.
 - Define per-run sequence ordering guarantees.
 - Define durable JSONL storage path/layout.
@@ -55,12 +55,18 @@ Envelope invariants:
 
 ## Event Type Catalog
 
-Canonical v1 core lifecycle event types are:
+Canonical v1 runtime event types are:
 
 - `run.queued`
 - `run.running`
 - `node.started`
 - `node.completed`
+- `node.step.started`
+- `node.step.completed`
+- `node.turn.user`
+- `node.turn.model`
+- `node.subcall.executed`
+- `node.action.executed`
 - `run.completed`
 - `run.failed`
 - `run.interrupted`
@@ -117,6 +123,91 @@ Additional invariants:
 | `duration_ms` | Yes | integer | `>= 0` |
 | `output_ref` | No | string | Non-empty when present; SHOULD reference persisted normalized inference output with `schema_id=sigil.rlm.response.v1` |
 
+### `node.step.started` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
+| `step_index` | Yes | integer | `>= 1`, contiguous per node |
+| `schema_id` | Yes | string | Must be `sigil.rlm.response.v1` in v1 |
+
+### `node.step.completed` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `step_id` | Yes | UUIDv7 | Matches an earlier `node.step.started` for same node |
+| `decision` | Yes | string enum | One of: `continue`, `final` |
+| `action_count` | Yes | integer | `>= 0` |
+| `duration_ms` | Yes | integer | `>= 0` |
+
+Additional invariants:
+
+- `decision=continue` => `action_count == 1` in v1.
+- `decision=final` => `action_count == 0`.
+
+### `node.turn.user` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
+| `role` | Yes | string literal | Must be `user` |
+| `content_ref` | Yes | string | Non-empty |
+
+Additional invariants:
+
+- `content_ref` SHOULD resolve to compact model-input artifact content for the
+  step.
+- Compact user-turn artifact content SHOULD include deterministic step-input
+  metadata and MUST NOT embed full raw context body.
+
+### `node.turn.model` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
+| `role` | Yes | string literal | Must be `model` |
+| `content_ref` | Yes | string | Non-empty |
+
+### `node.action.executed` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
+| `action_index` | Yes | integer | Must be `1` in v1 |
+| `action_type` | Yes | string literal | Must be `repl_code` |
+| `language` | Yes | string literal | Must be `go` |
+| `status` | Yes | string enum | One of: `completed`, `failed` |
+| `duration_ms` | Yes | integer | `>= 0` |
+| `output_ref` | Yes | string | Non-empty canonical artifact reference |
+| `error_code` | No | string | Required when `status=failed`; forbidden when `status=completed` |
+| `error_message` | No | string | Required when `status=failed`; forbidden when `status=completed` |
+
+Additional invariants:
+
+- `output_ref` MUST resolve to persisted action artifact for the same run,
+  node, step, and action index.
+- Canonical `output_ref` artifact reference format is defined in `PRD-0010`.
+
+### `node.subcall.executed` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
+| `action_index` | Yes | integer | Must be `1` in v1 |
+| `subcall_index` | Yes | integer | `>= 1`, contiguous in execution order per action |
+| `subcall_type` | Yes | string enum | One of: `llm_query`, `llm_query_batched`, `rlm_query`, `rlm_query_batched` |
+| `execution_mode` | Yes | string enum | One of: `plain`, `recursive`, `fallback` |
+| `status` | Yes | string enum | One of: `completed`, `failed` |
+| `provider` | Yes | string | Non-empty |
+| `model` | Yes | string | Non-empty |
+| `prompt_bytes` | Yes | integer | `>= 0` |
+| `context_bytes` | Yes | integer | `>= 0` |
+| `answer_bytes` | Yes | integer | `>= 0` |
+| `duration_ms` | Yes | integer | `>= 0` |
+| `child_node_id` | No | UUIDv7 | Required when `execution_mode=recursive`; forbidden otherwise |
+| `error_code` | No | string | Required when `status=failed`; forbidden when `status=completed` |
+| `error_message` | No | string | Required when `status=failed`; forbidden when `status=completed` |
+
 ### `run.completed` payload schema
 
 | Field | Required | Type | Invariants |
@@ -164,8 +255,8 @@ v1 uses strict validation rules:
 
 ## Durable Storage Contract
 
-- Durable run store base path MUST be `./sigil/runs`.
-- Per-run directory MUST be `./sigil/runs/<run_id>/`.
+- Durable run store base path MUST be `./.sigil/runs`.
+- Per-run directory MUST be `./.sigil/runs/<run_id>/`.
 - Event log file MUST be `events.jsonl`.
 - Event file format MUST be one JSON object per line.
 - Event store MUST be append-only; in-place mutation/rewrite is forbidden.
@@ -192,7 +283,7 @@ The following payload families are explicitly deferred (not locked in this PRD):
 - Provider usage/cost telemetry internals.
 
 Deferred payload families are out-of-contract for v1 and MUST NOT be introduced
-into core lifecycle payload schemas without a follow-up PRD update.
+into canonical v1 payload schemas without a follow-up PRD update.
 
 ## Deferred Contracts
 
@@ -205,11 +296,11 @@ The following are explicitly deferred to future PRDs:
 
 ## Acceptance Scenarios
 
-### Scenario SCN-0000: Persists run events to per-run append-only events.jsonl under sigil runs directory
+### Scenario SCN-0000: Persists run events to per-run append-only events.jsonl under .sigil runs directory
 
 Given a run emits runtime events  
 When events are persisted  
-Then events are appended to `./sigil/runs/<run_id>/events.jsonl`.
+Then events are appended to `./.sigil/runs/<run_id>/events.jsonl`.
 
 ### Scenario SCN-0001: Uses UUIDv7 identifiers for run node and event identity fields
 
@@ -265,15 +356,15 @@ Given persisted v1 events
 When envelopes are inspected  
 Then `schema_version` exists and equals `v1` for baseline records.
 
-### Scenario SCN-0010: Defines canonical core lifecycle event type catalog for v1
+### Scenario SCN-0010: Defines canonical runtime event type catalog for v1
 
 Given v1 run-event validation rules  
 When event type is validated  
-Then only the canonical core lifecycle event types are accepted.
+Then only the canonical v1 runtime event types are accepted.
 
-### Scenario SCN-0011: Enforces strict payload schema and invariants for each core lifecycle event type
+### Scenario SCN-0011: Enforces strict payload schema and invariants for each canonical v1 event type
 
-Given persisted events for canonical v1 lifecycle types  
+Given persisted events for canonical v1 event types  
 When payloads are validated  
 Then required fields, field types, and event-specific invariants are enforced.
 
@@ -284,8 +375,52 @@ Given an event with unknown envelope fields, unknown payload fields, or unknown
 When v1 validation executes  
 Then validation fails and the event is rejected.
 
-### Scenario SCN-0013: Defers non-core tool and model payload families while keeping core lifecycle payloads normative
+### Scenario SCN-0013: Defers non-core tool and model payload families while keeping canonical event payloads normative
 
 Given payload fields from deferred non-core families  
-When validating against core v1 lifecycle payload schemas  
+When validating against canonical v1 payload schemas  
 Then those fields are out-of-contract and rejected until a follow-up PRD update.
+
+### Scenario SCN-0014: Defines node step event types for decision-cycle tracking
+
+Given canonical v1 run-event validation rules  
+When event type is validated for step tracking  
+Then `node.step.started` and `node.step.completed` are accepted canonical event types.
+
+### Scenario SCN-0015: Enforces strict payload schema and invariants for node step events
+
+Given persisted node step events  
+When step payloads are validated  
+Then required fields and step invariants are enforced, including action-count constraints by decision.
+
+### Scenario SCN-0016: Defines node turn event types for user and model transcript contributions
+
+Given canonical v1 run-event validation rules  
+When event type is validated for transcript contributions  
+Then `node.turn.user` and `node.turn.model` are accepted canonical event types.
+
+### Scenario SCN-0017: Enforces strict payload schema and role invariants for node turn events
+
+Given persisted node turn events  
+When turn payloads are validated  
+Then required fields are enforced and role values must match event type semantics.
+
+### Scenario SCN-0018: Defines and validates node.action.executed payloads for single-action continue steps
+
+Given persisted node action execution events  
+When action payloads are validated  
+Then `node.action.executed` enforces action type language status output_ref
+artifact reference and v1 single-action invariants.
+
+### Scenario SCN-0019: Defines node.subcall.executed event type for subcall observability
+
+Given canonical v1 run-event validation rules  
+When event type is validated for subcall observability  
+Then `node.subcall.executed` is accepted as canonical event type.
+
+### Scenario SCN-0020: Enforces strict payload schema and invariants for node.subcall.executed events
+
+Given persisted node.subcall.executed events  
+When payloads are validated  
+Then strict payload field and invariant rules are enforced including status
+error fields and recursive child-node linkage semantics.

@@ -50,6 +50,9 @@ implementation details.
 
 - Requests MUST use OpenRouter Responses API.
 - Requests MUST be non-streaming in v1.
+- Requests MUST provide model input as ordered role-based message arrays.
+- Message order MUST preserve harness ordering semantics (`system` then `user`)
+  per step.
 - Requests MUST use `json_schema` strict structured outputs.
 - Requests MUST resolve schema definitions from central registry by `schema_id`.
 - Requests MUST enable response healing plugin.
@@ -62,6 +65,7 @@ implementation details.
 - Inline ad-hoc schema definitions are out-of-contract in v1.
 - v1 required schema IDs:
   - `sigil.rlm.response.v1`
+  - `sigil.llm.answer.v1`
 - Unresolved `schema_id` MUST fail request construction with typed schema lookup
   error.
 
@@ -74,16 +78,51 @@ Top-level fields:
 
 - `decision` (required string enum): `continue`, `final`
 - `continuation` (optional object):
-  - `assistant_output` (required string, non-empty when `continuation` present)
+  - `repl_code` (required string, non-empty Go code when `continuation`
+    present)
+  - `intent` (required string, non-empty when `continuation` present)
+  - `expected_observation` (required string, non-empty when `continuation`
+    present)
 - `final` (optional object):
   - `answer` (required string, non-empty when `final` present)
+  - `evidence` (required array with at least one item when `final` present)
+  - `confidence` (optional enum: `low`, `medium`, `high`)
+
+Evidence item fields:
+
+- `ref` (required string)
+- `chunk_id` (optional string)
+- `span_start` (optional integer >= 0)
+- `span_end` (optional integer >= 0 and `>= span_start` when both exist)
 
 Schema invariants:
 
-- `decision=continue` MUST include `continuation` and MUST NOT include `final`.
+- `decision=continue` MUST include `continuation.repl_code` and MUST NOT
+  include `final`.
+- `decision=continue` MUST include `continuation.intent` and
+  `continuation.expected_observation`.
 - `decision=final` MUST include `final` and MUST NOT include `continuation`.
+- `decision=final` MUST include `final.evidence` with at least one item.
+- `final.confidence` MUST be omitted or one of `low|medium|high`.
 - Unknown top-level fields or unknown nested fields MUST fail strict schema
   validation.
+- Markdown code-fence conventions (for example `repl-go`) are out-of-contract
+  for structured payload validation in v1.
+
+## Structured Response Schema Contract (`sigil.llm.answer.v1`)
+
+`sigil.llm.answer.v1` defines strict plain-subcall output shape for one-shot
+LM subcalls.
+
+Top-level fields:
+
+- `answer` (required string, non-empty)
+
+Schema invariants:
+
+- Payload MUST include `answer`.
+- `answer` MUST be a non-empty string.
+- Unknown top-level fields MUST fail strict schema validation.
 
 ## Structured Output Contract
 
@@ -108,6 +147,8 @@ Schema invariants:
   - `medium`
   - `high`
 - `llm.reasoning.enabled=false` MUST omit reasoning config from request payload.
+- Plain-subcall cheap path requests MAY force reasoning disabled behavior even
+  when top-level run config has reasoning enabled.
 - Normalized output MUST include a dedicated top-level `reasoning` key.
 - `reasoning.enabled` MUST reflect effective request behavior.
 - `reasoning.effort` MUST reflect configured effort when enabled; it MUST be
@@ -251,11 +292,11 @@ Given inference response payload for `sigil.rlm.response.v1`
 When strict schema validation runs  
 Then `decision` is required and value is either `continue` or `final`.
 
-### Scenario SCN-0015: Requires continuation branch and forbids final branch when decision is continue
+### Scenario SCN-0015: Requires continuation repl_code and forbids final branch when decision is continue
 
 Given inference response payload with `decision=continue`  
 When strict schema validation runs  
-Then `continuation.assistant_output` is required and `final` is absent.
+Then `continuation.repl_code` is required and `final` is absent.
 
 ### Scenario SCN-0016: Requires final branch and forbids continuation branch when decision is final
 
@@ -276,3 +317,46 @@ reasoning token counts
 When normalized output is emitted  
 Then reasoning artifacts are present under top-level `reasoning` and reasoning
 token counts are present under `usage.reasoning_tokens`.
+
+### Scenario SCN-0019: Resolves schema_id sigil.llm.answer.v1 from central registry for plain subcall inference requests
+
+Given inference request with `schema_id=sigil.llm.answer.v1`  
+When request construction resolves schema  
+Then schema is resolved from central registry and applied to request.
+
+### Scenario SCN-0020: Requires non-empty answer field in sigil.llm.answer.v1 payloads
+
+Given inference response payload for `sigil.llm.answer.v1`  
+When strict schema validation runs  
+Then payload is valid only when `answer` is present and non-empty.
+
+### Scenario SCN-0021: Constructs plain-subcall inference requests as ordered message arrays
+
+Given plain subcall inference request input  
+When OpenRouter request payload is constructed  
+Then request uses ordered role-based message arrays preserving role order.
+
+### Scenario SCN-0022: Supports cheap plain-subcall path with reasoning omitted from request payload
+
+Given plain subcall cheap-path inference execution  
+When request payload is constructed  
+Then reasoning block is omitted from request payload.
+
+### Scenario SCN-0023: Requires continuation intent and expected_observation fields when decision is continue
+
+Given inference response payload with `decision=continue`  
+When strict schema validation runs  
+Then `continuation.intent` and `continuation.expected_observation` are required
+and non-empty.
+
+### Scenario SCN-0024: Requires final evidence array when decision is final
+
+Given inference response payload with `decision=final`  
+When strict schema validation runs  
+Then `final.evidence` is required with at least one evidence item.
+
+### Scenario SCN-0025: Restricts final confidence to enum low medium or high when present
+
+Given inference response payload with `decision=final` and `final.confidence`  
+When strict schema validation runs  
+Then `final.confidence` is valid only when value is one of low medium or high.
