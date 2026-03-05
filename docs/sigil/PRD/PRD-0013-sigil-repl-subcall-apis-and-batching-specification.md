@@ -53,6 +53,10 @@ Batched result-item keys MUST be:
   order in output results.
 - `rlm_query_batched` MUST execute sequentially and preserve input order in
   output results.
+- Recursive APIs (`rlm_query`, `rlm_query_batched`) MUST execute each subcall
+  with an independent `300s` timeout budget derived from run-scoped context,
+  decoupled from parent action elapsed timeout and ancestor recursive subcall
+  deadline depletion across levels.
 
 ## Routing Contract
 
@@ -91,6 +95,10 @@ Batched result-item keys MUST be:
   - `sigil.llm.answer.v1`
 - `sigil.llm.answer.v1` MUST require:
   - `answer` (string, non-empty)
+- When schema is `sigil.llm.answer.v1`, runtime MAY normalize non-empty raw-text
+  extraction output to strict answer payload shape.
+- Raw-text normalization fallback MUST NOT apply to non
+  `sigil.llm.answer.v1` schemas.
 
 ## Failure Contract
 
@@ -195,3 +203,22 @@ Then run transitions to failed with typed infrastructure metadata.
 Given a plain subcall inference attempt fails for one subcall item  
 When subcall result is returned to REPL caller  
 Then failure is surfaced as structured subcall result error and run does not fail immediately.
+
+### Scenario SCN-0015: Applies independent 300-second recursive timeout budget across recursive subcall levels for rlm_query and rlm_query_batched invocations
+
+Given recursive subcalls execute through rlm_query or rlm_query_batched  
+When recursive subcall contexts are constructed  
+Then each recursive subcall applies an independent 300-second timeout budget derived from run-scoped context without inheriting ancestor recursive subcall deadline depletion.
+
+### Scenario SCN-0016: Applies raw-text fallback only for plain-subcall schema sigil.llm.answer.v1
+
+Given plain subcall extraction fails and schema is `sigil.llm.answer.v1`  
+When subcall response normalization executes  
+Then non-empty raw text is normalized to strict answer payload shape.
+
+### Scenario SCN-0017: Rejects raw-text fallback for non plain-subcall schemas in subcall execution paths
+
+Given extraction fails in subcall path for a schema other than
+`sigil.llm.answer.v1`  
+When normalization executes  
+Then raw-text fallback is rejected and typed extraction failure is surfaced.

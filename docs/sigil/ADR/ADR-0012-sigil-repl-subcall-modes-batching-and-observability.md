@@ -44,6 +44,12 @@ contract while allowing many subcalls within that action.
    artifacts:
    - New canonical runtime event: `node.subcall.executed`
    - Action artifacts persist stable-indexed `subcalls[]` traces.
+9. Recursive subcall execution context contract in v1:
+   - `rlm_query` and `rlm_query_batched` execute with an independent recursive
+     timeout budget (`300s`) decoupled from parent action elapsed time and from
+     ancestor recursive subcall deadline depletion across levels.
+   - Run cancellation MUST still propagate and cancel recursive subcall
+     execution.
 
 ## Consequences
 

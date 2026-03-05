@@ -62,6 +62,10 @@ bounded per-step model input.
   - `status`
   - optional `error_code`
   - optional `error_message`
+  - optional `error_detail` with:
+    - `stage` literal `compile`
+    - required `message`
+    - optional `line`, `column`, `symbol`, `source_line`
   - `stdout_preview`
   - `stdout_bytes`
   - `stdout_truncated`
@@ -173,3 +177,11 @@ Given an active node with effective context
 When deterministic step input envelope is built  
 Then `context_metadata.context_ref` is present and resolves to persisted
 run-output context artifact.
+
+### Scenario SCN-0013: Includes optional previous_action_feedback.error_detail for compile-stage failures
+
+Given previous continue action failed at compile stage with structured
+diagnostics  
+When next-step model-input feedback is constructed  
+Then `previous_action_feedback.error_detail` is included with compile
+diagnostic metadata.

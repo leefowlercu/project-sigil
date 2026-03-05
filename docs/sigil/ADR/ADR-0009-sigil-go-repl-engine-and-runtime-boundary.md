@@ -43,6 +43,13 @@ abstraction boundary.
   contracts.
 - REPL action execution artifacts MUST be persisted under run-local storage and
   referenced via `node.action.executed.output_ref`.
+- Fixed v1 runtime timeout budgets are:
+  - REPL action timeout: `180s`
+  - Recursive REPL subcall timeout: `300s`
+- Recursive subcalls (`rlm_query`, `rlm_query_batched`) MUST execute with a
+  run-scoped context source and independent timeout budget rather than
+  inheriting parent action elapsed deadline or ancestor recursive subcall
+  deadline depletion.
 - Import policy in v1 MUST be allowlist-based only.
 - Non-fatal REPL execution errors MUST be fed back into model context and MUST
   NOT automatically fail the run.

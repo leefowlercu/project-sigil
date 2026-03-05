@@ -61,6 +61,7 @@ Canonical v1 runtime event types are:
 - `run.running`
 - `node.started`
 - `node.completed`
+- `node.failed`
 - `node.step.started`
 - `node.step.completed`
 - `node.turn.user`
@@ -122,6 +123,16 @@ Additional invariants:
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `output_ref` | No | string | Non-empty when present; SHOULD reference persisted normalized inference output with `schema_id=sigil.rlm.response.v1` |
+
+### `node.failed` payload schema
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `status` | Yes | string literal | Must be `failed` |
+| `duration_ms` | Yes | integer | `>= 0` |
+| `error_code` | Yes | string | Non-empty |
+| `error_message` | Yes | string | Non-empty |
+| `failed_step_id` | No | UUIDv7 | Optional; UUIDv7 when present |
 
 ### `node.step.started` payload schema
 
@@ -424,3 +435,22 @@ Given persisted node.subcall.executed events
 When payloads are validated  
 Then strict payload field and invariant rules are enforced including status
 error fields and recursive child-node linkage semantics.
+
+### Scenario SCN-0021: Defines node.failed event type for canonical failed-node terminalization
+
+Given canonical v1 run-event validation rules  
+When event type is validated for failed-node terminalization  
+Then `node.failed` is accepted as canonical event type.
+
+### Scenario SCN-0022: Enforces strict payload schema and invariants for node.failed events
+
+Given persisted node.failed events  
+When payloads are validated  
+Then strict failed-node payload invariants are enforced for status duration and
+typed error metadata fields.
+
+### Scenario SCN-0023: Enforces node terminal-event exclusivity between node.completed and node.failed
+
+Given persisted node lifecycle events for a started node  
+When terminal node events are validated  
+Then exactly one of `node.completed` or `node.failed` exists for that node.

@@ -59,11 +59,17 @@ policy.
 - `rlm_query` MUST:
   - create a child node when `parent_depth + 1 <= rlm.max_depth`
   - return child `final.answer` on successful child completion
+  - execute recursive subcalls with run-scoped context and independent
+    recursive timeout budget (not parent action elapsed deadline and not
+    ancestor recursive subcall deadline depletion)
   - fallback to plain `llm_query` behavior when depth limit is reached in
     recursive profile
   - return typed runtime error on child-node failure propagation
 - `rlm_query_batched` MUST:
   - execute sequentially in input order
+  - execute recursive subcalls with run-scoped context and independent
+    recursive timeout budget (not parent action elapsed deadline and not
+    ancestor recursive subcall deadline depletion)
   - fallback per item to plain subcall behavior when depth limit is reached in
     recursive profile
   - return typed depth-limit behavior for all items when non-recursive profile
@@ -84,7 +90,8 @@ policy.
 
 ## Fixed v1 Guardrails
 
-- Action timeout MUST be `30s`.
+- Action timeout MUST be `180s`.
+- Recursive subcall timeout MUST be `300s`.
 - Maximum `repl_code` payload size MUST be `65536` bytes.
 - Captured stdout cap MUST be `1048576` bytes.
 - Captured stderr cap MUST be `1048576` bytes.
@@ -126,6 +133,11 @@ policy.
   - captured stdout/stderr (possibly truncated)
   - execution duration
   - typed error metadata when failed
+- On compile-stage failures, artifacts MAY include structured `error_detail`
+  with:
+  - `stage` literal `compile`
+  - required `message`
+  - optional `line`, `column`, `symbol`, `source_line`
 
 ## Error Policy Contract
 
@@ -134,6 +146,8 @@ policy.
   - set `node.action.executed.status=failed`
   - carry deterministic typed error metadata in event and artifact
   - feed deterministic error feedback into subsequent model context
+  - include compile-stage structured diagnostics in subsequent-step feedback
+    when parseable
   - continue node execution to the next decision step
 - Fatal infrastructure failures (`session initialization`, `artifact
   persistence`, internal runtime corruption/panic) MUST fail the run with typed
@@ -242,9 +256,9 @@ Given a continue action fails with non-fatal REPL execution error
 When action failure is handled  
 Then action failure is recorded and node execution continues to next step.
 
-### Scenario SCN-0010: Enforces 30-second execution timeout per action
+### Scenario SCN-0010: Enforces 180-second execution timeout per action
 
-Given a continue action exceeding 30 seconds execution time  
+Given a continue action exceeding 180 seconds execution time  
 When REPL runtime enforces guardrails  
 Then action times out with typed timeout error.
 
@@ -289,3 +303,27 @@ Then each result item includes answer error_code and error_message fields.
 Given a continue action executes one or more subcall items  
 When runtime events are persisted  
 Then one node.subcall.executed event exists per subcall item.
+
+### Scenario SCN-0018: Executes recursive subcalls with independent 300-second timeout budget decoupled from parent and recursive-level elapsed deadlines
+
+Given recursive subcalls execute from an active continue action  
+When recursive subcall contexts are constructed  
+Then each recursive subcall gets an independent 300-second timeout budget from run-scoped context without inheriting ancestor recursive subcall deadline depletion.
+
+### Scenario SCN-0019: Cancels recursive subcalls on run-context cancellation despite timeout decoupling from parent action context
+
+Given recursive subcalls execute with timeout decoupled from parent action elapsed time  
+When run context is canceled  
+Then in-flight recursive subcalls are canceled deterministically.
+
+### Scenario SCN-0020: Persists structured compile diagnostics in failed action artifacts for repl_execution_compile errors
+
+Given a continue action fails with `repl_execution_compile`  
+When action artifact persistence executes  
+Then artifact includes structured compile diagnostics when parseable.
+
+### Scenario SCN-0021: Propagates compile diagnostics into previous-action feedback for subsequent model steps
+
+Given prior continue action artifact contains structured compile diagnostics  
+When next-step feedback is built  
+Then previous-action feedback includes compile diagnostic detail.

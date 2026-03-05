@@ -129,6 +129,8 @@ This PRD defines that harness mechanism contract for v1.
   nodes.
 - Subcall API execution modes, batched result typing, and detailed
   observability requirements are defined in `PRD-0013`.
+- Recursive subcall timeout budgets and recursive subcall context-binding rules
+  are defined in `PRD-0010` and `PRD-0013`.
 
 ## Completion and Failure Contract
 
@@ -136,6 +138,9 @@ This PRD defines that harness mechanism contract for v1.
   `final.answer`.
 - Root finalization MUST validate resolvable `final.evidence[]` references
   before node/run completion as defined in `PRD-0014`.
+- Node failure terminalization policy (`node.failed` semantics and ordering
+  guarantees) and non-timeout subcall/compile hardening are defined in
+  `PRD-0015`.
 - Unrecoverable inference, REPL, or harness orchestration errors MUST terminate
   run as `failed` with typed error metadata.
 - Child-node failures MUST propagate deterministic failure information to caller

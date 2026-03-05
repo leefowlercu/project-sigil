@@ -38,9 +38,11 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil REPL subcall APIs batching and observability contract
 - [`PRD-0014-sigil-structured-output-verifiability-and-prompt-schema-synchronization-specification.md`](PRD-0014-sigil-structured-output-verifiability-and-prompt-schema-synchronization-specification.md):
   Sigil structured output verifiability and runtime prompt-schema synchronization contract
+- [`PRD-0015-sigil-non-timeout-stability-and-observability-hardening-specification.md`](PRD-0015-sigil-non-timeout-stability-and-observability-hardening-specification.md):
+  Sigil non-timeout stability and failure observability hardening contract
 
 ## Next PRD
 
 Create the next record as:
 
-- `docs/sigil/PRD/PRD-0015-<slug>-specification.md`
+- `docs/sigil/PRD/PRD-0016-<slug>-specification.md`

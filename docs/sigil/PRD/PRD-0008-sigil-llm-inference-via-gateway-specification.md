@@ -124,6 +124,18 @@ Schema invariants:
 - `answer` MUST be a non-empty string.
 - Unknown top-level fields MUST fail strict schema validation.
 
+## Plain Subcall Extraction Fallback Contract
+
+- Extraction fallback is schema-scoped and applies only to
+  `sigil.llm.answer.v1`.
+- If structured extraction fails for `sigil.llm.answer.v1` and non-empty raw
+  output text is available, adapter MUST normalize payload to:
+  - `{"answer":"<trimmed raw text>"}`
+- For schemas other than `sigil.llm.answer.v1`, raw-text extraction fallback is
+  forbidden.
+- When fallback is used, normalized output `raw_metadata` MUST include
+  extraction mode/source metadata.
+
 ## Structured Output Contract
 
 - All inference requests MUST require strict schema validation.
@@ -360,3 +372,23 @@ Then `final.evidence` is required with at least one evidence item.
 Given inference response payload with `decision=final` and `final.confidence`  
 When strict schema validation runs  
 Then `final.confidence` is valid only when value is one of low medium or high.
+
+### Scenario SCN-0026: Applies schema-specific raw-text fallback for sigil.llm.answer.v1 extraction failures
+
+Given response extraction fails for schema `sigil.llm.answer.v1` and non-empty
+raw output text exists  
+When normalization runs  
+Then payload is normalized as strict answer JSON object using trimmed raw text.
+
+### Scenario SCN-0027: Rejects raw-text fallback for non sigil.llm.answer.v1 schemas
+
+Given response extraction fails for schema other than `sigil.llm.answer.v1`  
+When normalization runs  
+Then extraction fallback is rejected and inference returns typed extraction
+failure.
+
+### Scenario SCN-0028: Emits extraction-mode metadata in raw_metadata when plain-subcall fallback is applied
+
+Given plain-subcall extraction fallback path is used  
+When normalized inference response is emitted  
+Then `raw_metadata` includes extraction mode/source metadata for observability.

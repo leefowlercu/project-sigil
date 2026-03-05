@@ -33,9 +33,11 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define REPL subcall API modes, batching behavior, and subcall observability contracts
 - [`ADR-0013-sigil-structured-output-verifiability-and-prompt-schema-sync.md`](ADR-0013-sigil-structured-output-verifiability-and-prompt-schema-sync.md):
   Define enriched structured-output verifiability and runtime prompt-schema synchronization
+- [`ADR-0014-sigil-non-timeout-stability-and-failure-observability-hardening.md`](ADR-0014-sigil-non-timeout-stability-and-failure-observability-hardening.md):
+  Define node-failure observability and non-timeout inference/compile hardening
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0014-<slug>.md`
+- `docs/sigil/ADR/ADR-0015-<slug>.md`
