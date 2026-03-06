@@ -35,9 +35,11 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define enriched structured-output verifiability and runtime prompt-schema synchronization
 - [`ADR-0014-sigil-non-timeout-stability-and-failure-observability-hardening.md`](ADR-0014-sigil-non-timeout-stability-and-failure-observability-hardening.md):
   Define node-failure observability and non-timeout inference/compile hardening
+- [`ADR-0015-sigil-deterministic-runtime-governance-guardrails.md`](ADR-0015-sigil-deterministic-runtime-governance-guardrails.md):
+  Define deterministic runtime governance guardrails for harness execution
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0015-<slug>.md`
+- `docs/sigil/ADR/ADR-0016-<slug>.md`

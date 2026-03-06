@@ -74,6 +74,11 @@ llm:
 rlm:
   enabled: <bool>
   max_depth: <int>
+guardrails:
+  max_steps_per_node: <int>
+  max_total_steps_per_run: <int>
+  max_run_duration_ms: <int>
+  max_consecutive_step_failures: <int>
 ```
 
 ## Default Values
@@ -93,6 +98,10 @@ rlm:
 - `llm.openrouter.api_key_env`: `OPENROUTER_API_KEY`
 - `rlm.enabled`: `true`
 - `rlm.max_depth`: `3`
+- `guardrails.max_steps_per_node`: `64`
+- `guardrails.max_total_steps_per_run`: `256`
+- `guardrails.max_run_duration_ms`: `1200000`
+- `guardrails.max_consecutive_step_failures`: `6`
 
 ## Validation Rules
 
@@ -128,6 +137,10 @@ rlm:
   - `high`
 - If `llm.reasoning.enabled=false`, `llm.reasoning.effort` MAY be present and
   is ignored for inference request construction.
+- `guardrails.max_steps_per_node` MUST be `>= 1`.
+- `guardrails.max_total_steps_per_run` MUST be `>= 1`.
+- `guardrails.max_run_duration_ms` MUST be `>= 1`.
+- `guardrails.max_consecutive_step_failures` MUST be `>= 1`.
 
 ## Environment Override Contract
 
@@ -149,6 +162,10 @@ The following environment variables are representative contract examples:
 - `SIGIL_RUN_LLM_OPENROUTER_API_KEY_ENV`
 - `SIGIL_RUN_RLM_ENABLED`
 - `SIGIL_RUN_RLM_MAX_DEPTH`
+- `SIGIL_RUN_GUARDRAILS_MAX_STEPS_PER_NODE`
+- `SIGIL_RUN_GUARDRAILS_MAX_TOTAL_STEPS_PER_RUN`
+- `SIGIL_RUN_GUARDRAILS_MAX_RUN_DURATION_MS`
+- `SIGIL_RUN_GUARDRAILS_MAX_CONSECUTIVE_STEP_FAILURES`
 - `SIGIL_RUN_SYSTEM_PROMPT_APPEND`
 - `SIGIL_RUN_PROMPT`
 - `SIGIL_RUN_PROMPT_TEMPLATE`
@@ -289,3 +306,27 @@ Given run configuration values and corresponding reasoning environment variables
 When merge precedence is applied  
 Then `SIGIL_RUN_LLM_REASONING_ENABLED` and
 `SIGIL_RUN_LLM_REASONING_EFFORT` override file/default values.
+
+### Scenario SCN-0019: Defines deterministic guardrails section in run config schema
+
+Given run configuration schema definitions are loaded  
+When schema fields are inspected  
+Then guardrails keys exist for max_steps_per_node max_total_steps_per_run max_run_duration_ms and max_consecutive_step_failures.
+
+### Scenario SCN-0020: Applies deterministic guardrail defaults when guardrails fields are omitted
+
+Given merged run configuration omits guardrails fields  
+When defaults are applied  
+Then guardrail fields resolve to deterministic default values.
+
+### Scenario SCN-0021: Applies SIGIL_RUN environment overrides for guardrails fields
+
+Given run configuration values and corresponding guardrails environment variables  
+When merge precedence is applied  
+Then SIGIL_RUN guardrail environment values override file/default values.
+
+### Scenario SCN-0022: Rejects run configuration when deterministic guardrail values are non-positive
+
+Given merged run configuration with one or more non-positive guardrail values  
+When validation runs  
+Then initialization fails with guardrail validation error.

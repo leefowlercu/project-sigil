@@ -98,6 +98,9 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
 
 - Unrecoverable harness, inference, template-render, or runtime infrastructure
   errors MUST terminate run as `failed` with typed error metadata.
+- Deterministic runtime governance guardrail breaches MUST terminate run as
+  `failed` with typed `harness_limit_exceeded` metadata and deterministic limit
+  fields.
 - Command MUST exit non-zero on terminal failed run.
 
 ## Deferred Contracts
@@ -204,3 +207,9 @@ Then stdout contains JSON summary with `run_id`, `state`, `final_answer_ref`,
 Given unrecoverable harness inference template or runtime infrastructure failure  
 When command handles terminal failure  
 Then command exits non-zero and failure metadata is typed and deterministic.
+
+### Scenario SCN-0015: Exits non-zero when deterministic runtime guardrail breach terminalizes run
+
+Given deterministic runtime guardrail breach occurs during harness execution  
+When command handles terminal failed run  
+Then command exits non-zero and run.failed contains deterministic guardrail breach metadata.

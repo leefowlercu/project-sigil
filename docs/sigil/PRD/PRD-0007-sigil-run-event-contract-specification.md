@@ -235,7 +235,16 @@ Additional invariants:
 | `error_code` | Yes | string | Non-empty |
 | `error_message` | Yes | string | Non-empty |
 | `failed_node_id` | No | UUIDv7 | Optional |
+| `failed_step_id` | No | UUIDv7 | Optional; UUIDv7 when present |
 | `retryable` | Yes | boolean | None |
+| `limit_key` | No | string | Non-empty when present |
+| `configured_value` | No | string | Non-empty when present; required when `limit_key` is present |
+| `observed_value` | No | string | Non-empty when present; required when `limit_key` is present |
+
+Additional invariants:
+
+- If `limit_key` is present, `configured_value` and `observed_value` MUST both
+  be present and non-empty.
 
 ### `run.interrupted` payload schema
 
@@ -454,3 +463,21 @@ typed error metadata fields.
 Given persisted node lifecycle events for a started node  
 When terminal node events are validated  
 Then exactly one of `node.completed` or `node.failed` exists for that node.
+
+### Scenario SCN-0024: Extends run.failed payload with deterministic guardrail metadata fields
+
+Given persisted run.failed events for guardrail terminalization  
+When payloads are validated  
+Then optional deterministic guardrail metadata fields are accepted with strict schema rules.
+
+### Scenario SCN-0025: Requires configured_value and observed_value when run.failed limit_key is present
+
+Given run.failed payload includes `limit_key`  
+When strict payload validation executes  
+Then `configured_value` and `observed_value` are required and non-empty.
+
+### Scenario SCN-0026: Validates failed_step_id as UUIDv7 when present in run.failed payload
+
+Given run.failed payload includes `failed_step_id`  
+When strict payload validation executes  
+Then `failed_step_id` must be UUIDv7.

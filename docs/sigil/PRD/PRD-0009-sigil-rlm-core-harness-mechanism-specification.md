@@ -141,6 +141,8 @@ This PRD defines that harness mechanism contract for v1.
 - Node failure terminalization policy (`node.failed` semantics and ordering
   guarantees) and non-timeout subcall/compile hardening are defined in
   `PRD-0015`.
+- Deterministic runtime governance guardrails (step-count, run-duration, and
+  consecutive-failure thresholds) are defined in `PRD-0016`.
 - Unrecoverable inference, REPL, or harness orchestration errors MUST terminate
   run as `failed` with typed error metadata.
 - Child-node failures MUST propagate deterministic failure information to caller
@@ -154,7 +156,6 @@ The following are explicitly deferred to future PRDs:
 - Provider-specific prompt versioning and migration workflows.
 - Fine-grained REPL sandboxing and resource quotas.
 - Multi-REPL language support beyond Go.
-- Harness-level budget policies (for example max steps per node).
 
 ## Acceptance Scenarios
 
@@ -260,3 +261,9 @@ And recursive subcalls return typed depth-limit feedback.
 Given a node step with `decision=continue` and non-empty `continuation.repl_code`  
 When repl_code execution issues multiple subcalls  
 Then exactly one continuation action is recorded for that step and subcalls are observed inside that action.
+
+### Scenario SCN-0017: Applies deterministic runtime governance guardrails from PRD-0016 during harness execution
+
+Given an active harness run under recursive or non-recursive profile  
+When deterministic runtime governance guardrails are evaluated during execution  
+Then guardrail enforcement and breach terminalization behavior follow `PRD-0016`.

@@ -40,9 +40,11 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil structured output verifiability and runtime prompt-schema synchronization contract
 - [`PRD-0015-sigil-non-timeout-stability-and-observability-hardening-specification.md`](PRD-0015-sigil-non-timeout-stability-and-observability-hardening-specification.md):
   Sigil non-timeout stability and failure observability hardening contract
+- [`PRD-0016-sigil-deterministic-runtime-governance-guardrails-specification.md`](PRD-0016-sigil-deterministic-runtime-governance-guardrails-specification.md):
+  Sigil deterministic runtime governance guardrails contract
 
 ## Next PRD
 
 Create the next record as:
 
-- `docs/sigil/PRD/PRD-0016-<slug>-specification.md`
+- `docs/sigil/PRD/PRD-0017-<slug>-specification.md`
