@@ -41,6 +41,7 @@ Initial state MUST be `queued`.
 Allowed transitions:
 
 - `queued -> running`
+- `queued -> interrupted`
 - `running -> completed`
 - `running -> failed`
 - `running -> interrupted`
@@ -76,6 +77,7 @@ Terminal run states MUST reject further transitions.
 
 - Unrecoverable runtime failure MUST transition run to `failed`.
 - Explicit interruption MUST transition run to `interrupted`.
+- Explicit interruption MAY occur from `queued` before execution begins.
 - Once interrupted, failed, or completed, run state remains terminal.
 
 ## Deferred Contracts
@@ -141,3 +143,9 @@ Then transition validation fails.
 Given a run in `running` state with active recursive nodes  
 When tool or code execution activity occurs  
 Then activity is recorded as node-scoped events and no additional node entity is created.
+
+### Scenario SCN-0009: Transitions run from queued to interrupted when explicit interruption arrives before execution begins
+
+Given a run in `queued` state
+When explicit interruption is requested before execution begins
+Then run transitions to `interrupted`.

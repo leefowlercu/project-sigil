@@ -28,6 +28,8 @@ runtime command.
 - Defining asynchronous job queue semantics for run execution.
 - Defining app-server run-control APIs.
 - Defining streaming inference behavior in v1.
+- Defining `sigil run stop` behavior owned by
+  `PRD-0450-sigil-run-stop-command-execution-specification.md`.
 
 ## Command Runtime Contract
 
@@ -110,7 +112,6 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
 The following are deferred to future PRDs:
 
 - Asynchronous run execution control.
-- Cancellation/stop contract for in-flight CLI runs.
 - User-configurable template engines.
 
 ## Acceptance Scenarios

@@ -273,6 +273,15 @@ Additional invariants:
 | `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
 | `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
 
+Additional invariants:
+
+- `interrupted_by` MUST be present and non-empty when `reason=user_request`.
+- User-request interruption initiated by
+  `PRD-0450-sigil-run-stop-command-execution-specification.md` MUST set
+  `interrupted_by=cli.run.stop`.
+- `interrupted_node_id` SHOULD identify the active node when interruption is
+  observed during active work.
+
 ## Extensibility Rules
 
 v1 uses strict validation rules:

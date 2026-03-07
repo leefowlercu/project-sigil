@@ -39,9 +39,11 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define deterministic runtime governance guardrails for harness execution
 - [`ADR-0016-sigil-accounting-ledger-and-provenance-contract.md`](ADR-0016-sigil-accounting-ledger-and-provenance-contract.md):
   Define accounting ledger, provenance, and rollup contracts for sigil runs
+- [`ADR-0017-sigil-local-run-stop-pid-signal-control.md`](ADR-0017-sigil-local-run-stop-pid-signal-control.md):
+  Define local PID-and-signal graceful-stop control for sigil CLI runs
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0017-<slug>.md`
+- `docs/sigil/ADR/ADR-0018-<slug>.md`

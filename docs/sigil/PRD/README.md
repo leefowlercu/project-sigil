@@ -50,6 +50,8 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil run-start command input contract
 - [`PRD-0140-sigil-application-logging-specification.md`](PRD-0140-sigil-application-logging-specification.md):
   Sigil application logging contract
+- [`PRD-0150-sigil-run-stop-command-inputs-specification.md`](PRD-0150-sigil-run-stop-command-inputs-specification.md):
+  Sigil run-stop command input contract
 
 ### Runtime Core
 
@@ -79,6 +81,8 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil Go REPL runtime contract
 - [`PRD-0440-sigil-repl-subcall-apis-and-batching-specification.md`](PRD-0440-sigil-repl-subcall-apis-and-batching-specification.md):
   Sigil REPL subcall API and batching contract
+- [`PRD-0450-sigil-run-stop-command-execution-specification.md`](PRD-0450-sigil-run-stop-command-execution-specification.md):
+  Sigil run-stop command execution contract
 
 ### Operational Policy and Accounting
 
@@ -114,6 +118,6 @@ number in that block.
 
 Examples:
 
-- `docs/sigil/PRD/PRD-0150-<slug>-specification.md` for a new CLI/config contract
+- `docs/sigil/PRD/PRD-0160-<slug>-specification.md` for a new CLI/config contract
 - `docs/sigil/PRD/PRD-0330-<slug>-specification.md` for a new inference contract
-- `docs/sigil/PRD/PRD-0450-<slug>-specification.md` for a new harness/REPL contract
+- `docs/sigil/PRD/PRD-0460-<slug>-specification.md` for a new harness/REPL contract

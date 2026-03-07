@@ -15,7 +15,8 @@ the root and parent command surface.
 ## Goals
 
 - Define the initial `sigil` executable command tree.
-- Define observable behavior for root, parent, and placeholder commands.
+- Define observable behavior for root and parent commands and delegated command
+  entrypoints.
 - Define initial exit code behavior for usage-only command paths.
 - Define error handling expectations for unknown or invalid subcommands.
 
@@ -23,7 +24,8 @@ the root and parent command surface.
 
 - Defining run lifecycle execution behavior internals for `run start` or
   `run stop`.
-- Defining `run stop --run-id` or any required flag contract.
+- Defining `run stop` positional-argument or execution semantics beyond
+  delegation.
 - Defining custom error strings beyond Cobra default behavior.
 
 ## CLI Surface Contract
@@ -47,7 +49,9 @@ sigil
 - `sigil run` MUST print usage/help and perform no runtime action.
 - `sigil run start` behavior is delegated to
   `PRD-0410-sigil-run-start-command-execution-specification.md`.
-- `sigil run stop` MUST print usage/help as a usage-only placeholder command.
+- `sigil run stop` behavior is delegated to
+  `PRD-0150-sigil-run-stop-command-inputs-specification.md` and
+  `PRD-0450-sigil-run-stop-command-execution-specification.md`.
 - No positional arguments or required flags are defined in this PRD.
 
 ## Exit Code Contract
@@ -56,7 +60,8 @@ sigil
 - `sigil run` with no subcommand MUST exit with status code `0`.
 - `sigil run start` exit behavior is defined by
   `PRD-0410-sigil-run-start-command-execution-specification.md`.
-- `sigil run stop` usage-only behavior MUST exit with status code `0`.
+- `sigil run stop` exit behavior is defined by
+  `PRD-0450-sigil-run-stop-command-execution-specification.md`.
 
 ## Error Handling Contract
 
@@ -69,9 +74,8 @@ sigil
 
 The following are explicitly deferred to a future PRD:
 
-- Runtime behavior for stopping an in-progress run (`sigil run stop`).
-- Run stop lifecycle and interruption semantics.
-- Any `run stop --run-id` flag schema, requiredness, and validation rules.
+- Lifecycle, event, and interruption internals owned by runtime lifecycle and
+  event PRDs.
 
 ## Acceptance Scenarios
 
@@ -101,11 +105,13 @@ When a user runs `sigil run start`
 Then `sigil run start` behavior follows
 `PRD-0410-sigil-run-start-command-execution-specification.md`.
 
-### Scenario SCN-0004: Provides sigil run stop as a usage-only placeholder command
+### Scenario SCN-0004: Delegates sigil run stop behavior to PRD-0150 and PRD-0450 run-stop contracts
 
 Given the `sigil` executable is available  
 When a user runs `sigil run stop`  
-Then usage/help is printed and the process exits with status code `0`.
+Then `sigil run stop` behavior follows
+`PRD-0150-sigil-run-stop-command-inputs-specification.md` and
+`PRD-0450-sigil-run-stop-command-execution-specification.md`.
 
 ### Scenario SCN-0005: Uses framework-default error behavior for unknown subcommands
 
