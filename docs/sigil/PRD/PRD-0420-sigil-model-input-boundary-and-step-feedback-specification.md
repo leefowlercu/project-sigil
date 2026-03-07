@@ -16,6 +16,7 @@ This PRD owns:
 - bounded model-input envelope construction
 - step-level `user` message shape
 - context metadata and `context_ref`
+- `execution_state` progress metadata
 - `previous_action_feedback` shape
 - compact user-turn artifact behavior
 
@@ -23,6 +24,7 @@ This PRD owns:
 
 - Exclude full raw context from model-step inference requests.
 - Define deterministic step-envelope content and bounded feedback behavior.
+- Expose deterministic execution-state progress metadata to model-step inference.
 - Define compact `node.turn.user` artifact behavior.
 - Preserve recursive and non-recursive profile behavior under the bounded-input contract.
 
@@ -49,6 +51,7 @@ This PRD owns:
   - `query`
   - `step_index`
   - `context_metadata`
+  - `execution_state`
   - optional `previous_action_feedback`
 
 ## Context Metadata Contract
@@ -67,6 +70,29 @@ This PRD owns:
 - `context_ref` MUST be non-empty and resolvable in run-local storage.
 - The referenced artifact is the canonical persisted form of node-local context for evidence and prompt-boundary workflows.
 
+## Execution State Contract
+
+`execution_state` MUST include:
+
+- `node_depth`
+- `max_depth`
+- `remaining_depth`
+- `node_steps_used`
+- `node_steps_remaining`
+- `run_steps_used`
+- `run_steps_remaining`
+- `same_context_as_previous_step`
+- `small_context`
+- `recursive_subcalls_allowed`
+- optional `recursive_subcalls_reason`
+
+`execution_state` rules:
+
+- values MUST be deterministic for equivalent node state and guardrail budgets
+- `same_context_as_previous_step` MUST be `false` on the first step and `true` on later steps of the same node
+- `small_context` MUST be derived from deterministic context-size heuristics rather than model output
+- `recursive_subcalls_reason`, when present, MUST explain why recursive subcalls are not allowed for the current step
+
 ## Previous Action Feedback Contract
 
 - First step MUST omit `previous_action_feedback`.
@@ -76,6 +102,7 @@ This PRD owns:
   - optional `error_code`
   - optional `error_message`
   - optional `error_detail`
+  - optional `subcall_summary`
   - `stdout_preview`
   - `stdout_bytes`
   - `stdout_truncated`
@@ -92,6 +119,13 @@ This PRD owns:
   - optional `column`
   - optional `symbol`
   - optional `source_line`
+- `subcall_summary`, when present, MUST include deterministic counts for:
+  - total subcalls
+  - plain-mode subcalls
+  - recursive-mode subcalls
+  - fallback-mode subcalls
+  - completed subcalls
+  - failed subcalls
 - Action artifacts remain the source of truth for full stdout and stderr.
 
 ## User-Turn Artifact Contract
@@ -200,3 +234,15 @@ Given the prior continue action failed at compile stage
 And structured compile diagnostics are available in the action artifact  
 When subsequent step input is constructed  
 Then `previous_action_feedback.error_detail` is included.
+
+### Scenario SCN-0014: Includes execution_state with depth step budgets and recursion-permission metadata in user step envelope
+
+Given an active node step with resolved query context and guardrail budgets  
+When the user step envelope is encoded  
+Then `execution_state` includes depth step-budget and recursion-permission metadata.
+
+### Scenario SCN-0015: Includes previous_action_feedback.subcall_summary with deterministic counts by execution mode and status
+
+Given a prior continue action executed one or more subcalls  
+When subsequent step input is constructed  
+Then `previous_action_feedback.subcall_summary` includes deterministic counts by execution mode and status.

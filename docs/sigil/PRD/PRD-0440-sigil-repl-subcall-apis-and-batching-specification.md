@@ -16,6 +16,7 @@ This PRD owns:
 - plain versus recursive subcall execution modes
 - batched subcall behavior
 - recursive depth-limit behavior
+- small-context local-only recursive fallback behavior
 - subcall observability and failure behavior
 
 Inference adapter behavior is defined in `PRD-0300`. Plain-subcall and harness
@@ -27,6 +28,7 @@ defined in `PRD-0430`.
 - Define the REPL subcall API surface for plain and recursive workflows.
 - Define deterministic mixed batch execution behavior.
 - Define recursive depth-limit and non-recursive profile behavior.
+- Define deterministic small-context fallback behavior after recursive exploration has already occurred in the same node.
 - Define subcall observability contracts in events and action artifacts.
 - Define timeout and cancellation behavior for recursive subcalls.
 
@@ -64,6 +66,7 @@ Batched result-item keys MUST be:
 - Successful child-node `final` output MUST be returned to the caller REPL context.
 - `llm_query_batched` MUST execute bounded-parallel fan-out and preserve input order in output results.
 - `rlm_query_batched` MUST execute sequentially and preserve input order in output results.
+- After a small-context node has already executed recursive subcalls in a prior continue step, subsequent `rlm_query` and `rlm_query_batched` invocations in that same node MUST fall back to plain subcall behavior instead of creating additional child nodes.
 - Recursive APIs (`rlm_query`, `rlm_query_batched`) MUST execute each subcall with an independent `300s` timeout budget derived from run-scoped context, decoupled from parent action elapsed timeout and ancestor recursive subcall deadline depletion across levels.
 - Recursive subcalls MUST still honor run-context cancellation.
 
@@ -212,3 +215,9 @@ Then each recursive subcall receives an independent `300s` timeout budget decoup
 Given a recursive subcall is active  
 When run-context cancellation occurs  
 Then the recursive subcall is canceled even though its timeout budget is decoupled from parent action elapsed time.
+
+### Scenario SCN-0017: Falls back to llm_query after a small-context node already used recursive subcalls in a prior step
+
+Given a small-context node has already executed recursive subcalls in a prior continue step  
+When `rlm_query` is invoked in a subsequent step of that same node  
+Then plain subcall behavior is used instead of creating another child node.
