@@ -86,6 +86,13 @@ Batched result-item keys MUST be:
   payload invariants.
 - Every continue-action artifact MUST persist `subcalls[]` traces with stable
   per-action subcall indexing.
+- `node.subcall.executed.accounting` MUST carry one normalized leaf accounting
+  summary for the executed subcall item.
+- Continue-action artifact `subcalls[].accounting` MUST mirror the normalized
+  leaf accounting summary for each traced subcall item.
+- Recursive subcall accounting MUST contribute to ancestor step node and run
+  `tree_total` accounting rollups without being double-counted in direct model
+  totals.
 - Continue-step contract remains unchanged: exactly one
   `continuation.repl_code` action per `decision=continue` step.
 
@@ -222,3 +229,16 @@ Given extraction fails in subcall path for a schema other than
 `sigil.llm.answer.v1`  
 When normalization executes  
 Then raw-text fallback is rejected and typed extraction failure is surfaced.
+
+### Scenario SCN-0018: Aggregates recursive subcall tree accounting into node and run totals
+
+Given recursive subcalls execute and produce normalized accounting  
+When node and run accounting rollups are inspected  
+Then recursive child-node accounting is included in ancestor tree totals.
+
+### Scenario SCN-0019: Persists subcall leaf accounting in events and action artifacts
+
+Given one or more subcalls execute inside a continue action  
+When subcall observability payloads are inspected  
+Then `node.subcall.executed` and action-artifact `subcalls[]` traces persist
+leaf accounting summaries.

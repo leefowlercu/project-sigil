@@ -37,9 +37,11 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define node-failure observability and non-timeout inference/compile hardening
 - [`ADR-0015-sigil-deterministic-runtime-governance-guardrails.md`](ADR-0015-sigil-deterministic-runtime-governance-guardrails.md):
   Define deterministic runtime governance guardrails for harness execution
+- [`ADR-0016-sigil-accounting-ledger-and-provenance-contract.md`](ADR-0016-sigil-accounting-ledger-and-provenance-contract.md):
+  Define accounting ledger, provenance, and rollup contracts for sigil runs
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0016-<slug>.md`
+- `docs/sigil/ADR/ADR-0017-<slug>.md`

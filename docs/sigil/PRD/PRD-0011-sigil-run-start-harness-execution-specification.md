@@ -92,6 +92,7 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
   - `state`
   - `final_answer`
   - `final_answer_ref`
+  - `accounting`
   - `events_path`
 
 ## Failure Contract
@@ -200,7 +201,7 @@ Then run completes and `run.completed.final_answer_ref` is set.
 Given run reaches completed terminal state  
 When command returns success  
 Then stdout contains JSON summary with `run_id`, `state`, `final_answer_ref`,
-`events_path`, and `final_answer`.
+`events_path`, `final_answer`, and `accounting`.
 
 ### Scenario SCN-0014: Exits non-zero with typed failure metadata on unrecoverable harness inference or template errors
 
@@ -213,3 +214,10 @@ Then command exits non-zero and failure metadata is typed and deterministic.
 Given deterministic runtime guardrail breach occurs during harness execution  
 When command handles terminal failed run  
 Then command exits non-zero and run.failed contains deterministic guardrail breach metadata.
+
+### Scenario SCN-0016: Includes accounting rollup in successful run summary and terminal events
+
+Given completed harness execution captures normalized accounting  
+When command returns success and terminal events are inspected  
+Then successful CLI JSON summary and terminal run events include accounting
+rollups.

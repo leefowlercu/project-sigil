@@ -25,7 +25,8 @@ configuration is loaded, merged, and validated for run execution.
 - Define merge precedence between defaults, file values, and environment
   overrides for run configuration.
 - Define validation rules for mutually exclusive fields, gateway constraints,
-  provider/model allow-lists, and reasoning configuration.
+  provider/model allow-lists, reasoning configuration, and accounting fallback
+  pricing.
 - Provide acceptance scenarios that can map directly to submodule acceptance
   coverage.
 
@@ -79,6 +80,14 @@ guardrails:
   max_total_steps_per_run: <int>
   max_run_duration_ms: <int>
   max_consecutive_step_failures: <int>
+accounting:
+  pricing_version: <string>
+  fallback_pricing:
+    <provider>:
+      <model>:
+        input_microusd_per_million_tokens: <int>
+        output_microusd_per_million_tokens: <int>
+        reasoning_microusd_per_million_tokens: <int>
 ```
 
 ## Default Values
@@ -102,6 +111,9 @@ guardrails:
 - `guardrails.max_total_steps_per_run`: `256`
 - `guardrails.max_run_duration_ms`: `1200000`
 - `guardrails.max_consecutive_step_failures`: `6`
+- `accounting.pricing_version`: `v1`
+- `accounting.fallback_pricing`: empty map (no built-in provider/model pricing
+  entries)
 
 ## Validation Rules
 
@@ -141,6 +153,14 @@ guardrails:
 - `guardrails.max_total_steps_per_run` MUST be `>= 1`.
 - `guardrails.max_run_duration_ms` MUST be `>= 1`.
 - `guardrails.max_consecutive_step_failures` MUST be `>= 1`.
+- `accounting.pricing_version` MUST be non-empty after merge.
+- `accounting.fallback_pricing` MAY be omitted entirely.
+- When `accounting.fallback_pricing.<provider>.<model>` is present,
+  `input_microusd_per_million_tokens` MUST be `>= 1`.
+- When `accounting.fallback_pricing.<provider>.<model>` is present,
+  `output_microusd_per_million_tokens` MUST be `>= 1`.
+- When `accounting.fallback_pricing.<provider>.<model>.reasoning_microusd_per_million_tokens`
+  is present, it MUST be `>= 1`.
 
 ## Environment Override Contract
 
@@ -166,6 +186,10 @@ The following environment variables are representative contract examples:
 - `SIGIL_RUN_GUARDRAILS_MAX_TOTAL_STEPS_PER_RUN`
 - `SIGIL_RUN_GUARDRAILS_MAX_RUN_DURATION_MS`
 - `SIGIL_RUN_GUARDRAILS_MAX_CONSECUTIVE_STEP_FAILURES`
+- `SIGIL_RUN_ACCOUNTING_PRICING_VERSION`
+- `SIGIL_RUN_ACCOUNTING_FALLBACK_PRICING_OPENAI_GPT_5_1_INPUT_MICROUSD_PER_MILLION_TOKENS`
+- `SIGIL_RUN_ACCOUNTING_FALLBACK_PRICING_OPENAI_GPT_5_1_OUTPUT_MICROUSD_PER_MILLION_TOKENS`
+- `SIGIL_RUN_ACCOUNTING_FALLBACK_PRICING_OPENAI_GPT_5_1_REASONING_MICROUSD_PER_MILLION_TOKENS`
 - `SIGIL_RUN_SYSTEM_PROMPT_APPEND`
 - `SIGIL_RUN_PROMPT`
 - `SIGIL_RUN_PROMPT_TEMPLATE`
@@ -330,3 +354,30 @@ Then SIGIL_RUN guardrail environment values override file/default values.
 Given merged run configuration with one or more non-positive guardrail values  
 When validation runs  
 Then initialization fails with guardrail validation error.
+
+### Scenario SCN-0023: Defines accounting section in run config schema
+
+Given run configuration contract definitions are loaded  
+When accounting configuration keys are inspected  
+Then `accounting.pricing_version` and `accounting.fallback_pricing` are
+defined in the run config schema.
+
+### Scenario SCN-0024: Applies default accounting pricing version when accounting section is omitted
+
+Given merged run configuration omits the `accounting` section  
+When defaults are applied  
+Then `accounting.pricing_version` resolves to `v1`.
+
+### Scenario SCN-0025: Applies SIGIL_RUN environment overrides for accounting fallback pricing
+
+Given run configuration values and corresponding accounting environment
+variables  
+When merge precedence is applied  
+Then SIGIL_RUN accounting environment values override file and default values.
+
+### Scenario SCN-0026: Rejects run configuration when accounting fallback pricing values are non-positive
+
+Given merged run configuration with one or more non-positive accounting
+fallback pricing values  
+When validation runs  
+Then initialization fails with accounting fallback-pricing validation error.

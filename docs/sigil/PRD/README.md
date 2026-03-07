@@ -42,9 +42,11 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil non-timeout stability and failure observability hardening contract
 - [`PRD-0016-sigil-deterministic-runtime-governance-guardrails-specification.md`](PRD-0016-sigil-deterministic-runtime-governance-guardrails-specification.md):
   Sigil deterministic runtime governance guardrails contract
+- [`PRD-0017-sigil-accounting-ledger-specification.md`](PRD-0017-sigil-accounting-ledger-specification.md):
+  Sigil accounting ledger and provenance contract
 
 ## Next PRD
 
 Create the next record as:
 
-- `docs/sigil/PRD/PRD-0017-<slug>-specification.md`
+- `docs/sigil/PRD/PRD-0018-<slug>-specification.md`

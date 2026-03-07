@@ -123,6 +123,8 @@ Additional invariants:
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `output_ref` | No | string | Non-empty when present; SHOULD reference persisted normalized inference output with `schema_id=sigil.rlm.response.v1` |
+| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted node accounting artifact |
 
 ### `node.failed` payload schema
 
@@ -150,6 +152,8 @@ Additional invariants:
 | `decision` | Yes | string enum | One of: `continue`, `final` |
 | `action_count` | Yes | integer | `>= 0` |
 | `duration_ms` | Yes | integer | `>= 0` |
+| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
+| `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference |
 
 Additional invariants:
 
@@ -216,6 +220,8 @@ Additional invariants:
 | `answer_bytes` | Yes | integer | `>= 0` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `child_node_id` | No | UUIDv7 | Required when `execution_mode=recursive`; forbidden otherwise |
+| `accounting` | Yes | object | MUST satisfy normalized `AccountingSummary` schema |
+| `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference |
 | `error_code` | No | string | Required when `status=failed`; forbidden when `status=completed` |
 | `error_message` | No | string | Required when `status=failed`; forbidden when `status=completed` |
 
@@ -226,6 +232,8 @@ Additional invariants:
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `final_answer_ref` | No | string | Non-empty when present; SHOULD reference terminal normalized inference output with `schema_id=sigil.rlm.response.v1` and `validated_payload.decision=final` |
+| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted run accounting artifact |
 
 ### `run.failed` payload schema
 
@@ -240,6 +248,8 @@ Additional invariants:
 | `limit_key` | No | string | Non-empty when present |
 | `configured_value` | No | string | Non-empty when present; required when `limit_key` is present |
 | `observed_value` | No | string | Non-empty when present; required when `limit_key` is present |
+| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted run accounting artifact |
 
 Additional invariants:
 
@@ -254,6 +264,66 @@ Additional invariants:
 | `reason` | Yes | string enum | One of: `user_request`, `policy_stop`, `system_shutdown` |
 | `interrupted_by` | No | string | Non-empty when present |
 | `interrupted_node_id` | No | UUIDv7 | Optional |
+| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted run accounting artifact |
+
+## Normalized Accounting Payload Contract
+
+Accounting surfaces are normalized summary objects, not raw provider payloads.
+All canonical event accounting payloads use USD-only v1 accounting.
+
+### `AccountingSummary`
+
+Leaf summaries and aggregate totals MUST use this schema:
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `currency` | Yes | string literal | Must be `usd` |
+| `input_tokens` | No | integer | `>= 0` when present |
+| `output_tokens` | No | integer | `>= 0` when present |
+| `total_tokens` | No | integer | `>= 0` when present; required when `token_status=complete` |
+| `reasoning_tokens` | No | integer | `>= 0` when present |
+| `known_input_cost_microusd` | No | integer | `>= 0` when present |
+| `known_output_cost_microusd` | No | integer | `>= 0` when present |
+| `known_reasoning_cost_microusd` | No | integer | `>= 0` when present |
+| `known_total_cost_microusd` | No | integer | `>= 0` when present; required when `cost_status=complete` |
+| `token_source` | Yes | string enum | One of: `gateway_reported`, `mixed`, `unavailable` |
+| `token_status` | Yes | string enum | One of: `complete`, `partial`, `unavailable` |
+| `cost_source` | Yes | string enum | One of: `gateway_reported`, `fallback_pricing`, `mixed`, `unavailable` |
+| `cost_status` | Yes | string enum | One of: `complete`, `partial`, `unavailable` |
+| `pricing_key` | Yes | object | Includes non-empty `provider` and `model` when known |
+| `pricing_version` | Yes | string | Non-empty |
+| `missing_token_item_count` | Yes | integer | `>= 0`; MUST be `>= 1` when `token_status=unavailable` |
+| `missing_cost_item_count` | Yes | integer | `>= 0`; MUST be `>= 1` when `cost_status=unavailable` |
+
+Additional invariants:
+
+- `complete` status MUST NOT imply unavailable totals.
+- `partial` status MUST preserve known subtotals instead of coercing missing
+  values to zero.
+- `unavailable` status MUST preserve missing-item counts instead of reporting
+  zero-complete totals.
+
+### `AccountingRollup`
+
+Aggregate event payloads MUST use this schema:
+
+| Field | Required | Type | Invariants |
+| --- | --- | --- | --- |
+| `model_total` | Yes | `AccountingSummary` | Direct model-step accounting for the scope |
+| `direct_subcalls_total` | Yes | `AccountingSummary` | Direct subcalls observed within the scope |
+| `tree_total` | Yes | `AccountingSummary` | Full causal total including recursive descendants |
+
+### `accounting_ref`
+
+When present, `accounting_ref` SHOULD resolve to canonical run-output artifact
+locations:
+
+- Run scope: `run-output://run/accounting.json`
+- Node scope: `run-output://node/<node_id>/accounting.json`
+- Step scope: `run-output://node/<node_id>/step/<step_id>/accounting.json`
+- Subcall scope:
+  `run-output://node/<node_id>/step/<step_id>/subcall-<subcall_index>-accounting.json`
 
 ## Extensibility Rules
 
@@ -300,7 +370,8 @@ The following payload families are explicitly deferred (not locked in this PRD):
 - Model provider request/response internals (token-level or raw provider
   payloads).
 - Code-execution internals (stdout/stderr chunks, sandbox telemetry).
-- Provider usage/cost telemetry internals.
+- Provider usage/cost telemetry internals beyond normalized accounting
+  summaries.
 
 Deferred payload families are out-of-contract for v1 and MUST NOT be introduced
 into canonical v1 payload schemas without a follow-up PRD update.
@@ -481,3 +552,24 @@ Then `configured_value` and `observed_value` are required and non-empty.
 Given run.failed payload includes `failed_step_id`  
 When strict payload validation executes  
 Then `failed_step_id` must be UUIDv7.
+
+### Scenario SCN-0027: Includes accounting rollup in successful run summary and terminal events
+
+Given completed terminal run events are persisted  
+When accounting payloads are inspected  
+Then step node and run terminal events include normalized accounting rollups  
+And persisted accounting artifact references remain non-empty when present.
+
+### Scenario SCN-0028: Persists subcall leaf accounting in events and action artifacts
+
+Given subcalls execute within a continue action  
+When canonical event and artifact payloads are inspected  
+Then `node.subcall.executed` and action-artifact `subcalls[]` traces include
+leaf accounting summaries.
+
+### Scenario SCN-0029: Preserves partial accounting status when cost is unavailable
+
+Given terminal or subcall accounting omits one or more cost totals  
+When normalized event payloads are inspected  
+Then accounting preserves `cost_status=partial` or `cost_status=unavailable`
+instead of zero-filling missing cost data.

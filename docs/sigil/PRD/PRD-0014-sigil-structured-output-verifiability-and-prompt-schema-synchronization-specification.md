@@ -62,6 +62,12 @@ Evidence item shape:
 - Accepted canonical schemes in v1:
   - `run-output://...`
   - `run-artifact://...`
+- When final evidence cites a prior action artifact surfaced via
+  `previous_action_feedback.output_ref`, the cited ref MUST match the provided
+  `output_ref` byte-for-byte.
+- If exact reuse of `previous_action_feedback.output_ref` is not possible,
+  final evidence MUST cite `context_ref` instead of synthesizing a new
+  `run-artifact://...` ref.
 - Unresolvable refs MUST fail finalization as typed output-validation failure.
 
 ## Final Output Persistence Contract
@@ -117,7 +123,7 @@ When step input metadata is built
 Then node context artifact is persisted and `context_metadata.context_ref` is
 present.
 
-### Scenario SCN-0004: Exposes resolvable evidence references through context_ref and previous_action_feedback.output_ref
+### Scenario SCN-0004: Exposes canonical and resolvable evidence references through context_ref and previous_action_feedback.output_ref
 
 Given a model step envelope and subsequent feedback envelope  
 When evidence-capable references are inspected  
@@ -183,3 +189,10 @@ Given strict inference validation and prompt generation are active
 When schema sources are compared  
 Then prompt schema text is derived from the same registry definition used for
 strict validation.
+
+### Scenario SCN-0014: Requires byte-for-byte previous_action_feedback.output_ref reuse with context_ref fallback for final evidence citations
+
+Given final evidence cites a prior continue-step action artifact  
+When effective system prompt instructions are inspected  
+Then prompt instructions require exact `previous_action_feedback.output_ref`
+reuse and `context_ref` fallback instead of synthesized `run-artifact` refs.

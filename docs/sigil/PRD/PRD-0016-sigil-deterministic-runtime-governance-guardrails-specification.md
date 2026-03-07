@@ -97,7 +97,8 @@ Invariant:
 
 ## Deferred Contract
 
-Token and cost guardrails are deferred to accounting-ledger delivery:
+Token and cost guardrail enforcement is deferred even though accounting-ledger
+capture and rollups are delivered in this phase:
 
 - `max_total_tokens`
 - `max_total_cost_usd`
