@@ -17,7 +17,8 @@ v1.
 
 - Define `sigil run stop` as a local graceful-stop command for CLI-started runs.
 - Define the v1 PID-and-signal control transport and auxiliary control files.
-- Define wait-to-terminal behavior and success output semantics.
+- Define wait-to-terminal behavior and success output semantics for text and
+  JSON modes.
 - Define user-stop interruption behavior for active and startup-window runs.
 
 ## Non-Goals
@@ -45,7 +46,14 @@ v1.
 
 ## Output Contract
 
-- Successful command output MUST be one JSON object including:
+- When `--output` is omitted or set to `text`, successful command output MUST
+  be a human-readable summary including:
+  - `run_id`
+  - `stop_requested`
+  - `state`
+  - `events_path`
+- When `--output json` is requested, successful command output MUST be one JSON
+  object including:
   - `run_id`
   - `stop_requested`
   - `state`
@@ -56,6 +64,8 @@ v1.
 - If a stop request loses the race to `completed` or `failed`, the command MUST
   still exit `0` and return the observed terminal state with
   `stop_requested=true`.
+- The v1 JSON field set and field names MUST remain backward compatible with the
+  existing successful `sigil run stop` result payload.
 
 ## Control Transport and Metadata Contract
 
@@ -124,13 +134,13 @@ The following are explicitly deferred to future PRDs:
 
 ## Acceptance Scenarios
 
-### Scenario SCN-0000: Interrupts an actively running CLI run and prints a terminal JSON stop result
+### Scenario SCN-0000: Interrupts an actively running CLI run and prints a human-readable stop result by default
 
 Given a local CLI run is actively executing  
 When a user runs `sigil run stop <run-id>`  
 Then the run transitions to `interrupted`  
-And stdout contains one JSON stop result with `run_id`, `stop_requested`,
-`state`, and `events_path`.
+And stdout contains a human-readable stop summary with `run_id`,
+`stop_requested`, `state`, and `events_path`.
 
 ### Scenario SCN-0001: Publishes process metadata and persists stop-request metadata for local CLI run control
 
@@ -139,17 +149,17 @@ When the run lifecycle and stop request metadata are inspected
 Then `process.json` exists for the active run  
 And `stop-request.json` is written before `SIGTERM` is issued.
 
-### Scenario SCN-0002: Returns terminal no-op stop results for completed failed or interrupted runs
+### Scenario SCN-0002: Returns terminal no-op JSON stop results for completed failed or interrupted runs when output json is requested
 
 Given a local CLI run is already in terminal state  
-When a user runs `sigil run stop <run-id>`  
+When a user runs `sigil run stop <run-id> --output json`  
 Then the command exits with status code `0`  
 And the JSON stop result contains `stop_requested=false`.
 
-### Scenario SCN-0003: Waits for terminal state and reports completed or failed when stop loses the race
+### Scenario SCN-0003: Waits for terminal state and reports completed or failed JSON results when stop loses the race under output json
 
 Given a stop request is issued for a local CLI run  
-When the target run reaches `completed` or `failed` before interruption is persisted  
+When the target run reaches `completed` or `failed` before interruption is persisted under `--output json`  
 Then the command exits with status code `0`  
 And the JSON stop result contains `stop_requested=true` and the observed
 terminal `state`.
@@ -174,3 +184,11 @@ Then `run.interrupted` contains `reason=user_request`,
 `interrupted_by=cli.run.stop`, and partial accounting  
 And the interrupted work does not emit synthetic `node.failed` or
 `node.step.completed` records solely because of the stop request.
+
+### Scenario SCN-0007: Interrupts an actively running CLI run and prints a terminal JSON stop result when output json is requested
+
+Given a local CLI run is actively executing  
+When a user runs `sigil run stop <run-id>` with `--output json`  
+Then the run transitions to `interrupted`  
+And stdout contains one JSON stop result with `run_id`, `stop_requested`,
+`state`, and `events_path`.

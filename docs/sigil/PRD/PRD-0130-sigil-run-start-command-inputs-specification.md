@@ -31,6 +31,8 @@ behavior for command initialization.
   a `sigil` application config file source.
 - `sigil run start` MUST accept `--run-config <path>` as an optional flag
   targeting a `sigil` run config file source.
+- `sigil run start` MUST accept inherited `-o, --output <text|json>` values
+  from the root CLI surface defined in `PRD-0110`.
 - `sigil run start` MUST accept repeatable `--var <key=value>` flags for
   template variable injection used by runtime behavior in
   `PRD-0410-sigil-run-start-command-execution-specification.md`.
@@ -66,6 +68,8 @@ behavior for command initialization.
 - Invalid `--var` entries MUST fail command validation with non-zero exit.
 - Duplicate `--var` keys MUST resolve deterministically using the last provided
   value.
+- Invalid inherited `--output` values MUST fail command validation before
+  configuration initialization or run execution begins.
 - Unknown or unsupported flags SHOULD follow Cobra default behavior and SHOULD
   exit non-zero.
 
@@ -136,3 +140,10 @@ Then command fails validation with non-zero exit.
 Given `sigil run start` receives duplicate `--var` keys in order  
 When template variable map is resolved  
 Then the last provided value for each duplicate key is used.
+
+### Scenario SCN-0008: Rejects invalid inherited output value for sigil run start
+
+Given `sigil run start` receives an inherited `--output` value outside
+`text|json`  
+When command input validation runs  
+Then command validation fails with non-zero exit before run execution begins.

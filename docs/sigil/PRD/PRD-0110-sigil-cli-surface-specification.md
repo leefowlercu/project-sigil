@@ -15,6 +15,7 @@ the root and parent command surface.
 ## Goals
 
 - Define the initial `sigil` executable command tree.
+- Define the global CLI output-format flag inherited by descendant commands.
 - Define observable behavior for root and parent commands and delegated command
   entrypoints.
 - Define initial exit code behavior for usage-only command paths.
@@ -42,6 +43,16 @@ sigil
 - Executable name MUST be `sigil`.
 - `run` MUST be a subcommand of the root command.
 - `start` and `stop` MUST be subcommands of `run`.
+
+## Global Output Flag Contract
+
+- `sigil` MUST accept a persistent `-o, --output <text|json>` flag.
+- The root output flag MUST be inherited by `sigil run`, `sigil run start`, and
+  `sigil run stop`.
+- The default output format MUST be `text`.
+- `json` output mode is compatibility mode for command result payloads only.
+- Help, usage, and Cobra-generated error surfaces MUST remain human-readable
+  text even when `--output json` is present.
 
 ## Command Behavior Contract
 
@@ -118,3 +129,10 @@ Then `sigil run stop` behavior follows
 Given the `sigil` executable is available  
 When a user runs a command path with an unknown subcommand  
 Then the CLI uses Cobra default error and usage behavior and exits non-zero.
+
+### Scenario SCN-0006: Keeps root and run help text when output json is requested
+
+Given the `sigil` executable is available  
+When a user runs `sigil --output json` or `sigil run --output json`  
+Then root and run help surfaces remain human-readable text  
+And the process exits with status code `0`.

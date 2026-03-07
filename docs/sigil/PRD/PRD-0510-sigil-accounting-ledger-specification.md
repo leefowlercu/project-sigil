@@ -157,7 +157,8 @@ Canonical runtime surfaces MUST expose accounting as follows:
 - `run.completed`, `run.failed`, and `run.interrupted` include run `AccountingRollup` and optional `accounting_ref`
 - `node.turn.model` artifacts include normalized model-turn accounting summaries
 - action artifacts include `subcalls[].accounting`
-- successful `sigil run start` JSON output includes run-level `accounting`
+- successful `sigil run start` text summaries include readable run-level accounting rollups
+- successful `sigil run start --output json` output includes run-level `accounting`
 
 Canonical accounting artifact locations are:
 
@@ -174,7 +175,8 @@ schema and accounting exposure semantics on those runtime surfaces.
 - `run.completed` MUST include final run accounting rollups.
 - `run.failed` MUST include partial accounting captured before failure.
 - `run.interrupted` MUST include partial accounting captured before interruption.
-- Successful CLI output MUST include the same run accounting rollup surfaced in `run.completed`.
+- Successful CLI output in both text and JSON modes MUST include the same
+  run accounting rollup surfaced in `run.completed`.
 
 ## Deferred Contract
 

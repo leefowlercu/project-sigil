@@ -20,7 +20,8 @@ runtime command.
   `context_template` using `--var key=value`.
 - Define recursive and non-recursive execution profile behavior selected by
   `rlm.enabled`.
-- Define terminal command success output contract.
+- Define default human-readable progress and summary output for successful runs.
+- Define JSON compatibility output for machine-consumer workflows.
 - Define fatal error propagation and non-zero exit behavior.
 
 ## Non-Goals
@@ -90,13 +91,51 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
 - Root `decision=final` with non-empty answer and resolvable `final.evidence[]`
   refs MUST complete run successfully.
 - Run-level accounting exposure semantics MUST follow `PRD-0510`.
-- Successful command output MUST be one JSON object including:
+
+### Default Text Output Contract
+
+- When `--output` is omitted or set to `text`, `sigil run start` MUST render an
+  append-only human-readable stdout stream.
+- Text-mode output MUST begin with a preflight summary including:
+  - resolved application config path
+  - resolved run config path
+  - selected gateway
+  - selected provider/model
+  - execution profile
+  - `rlm.max_depth`
+- Text-mode live progress MUST be driven by persisted canonical lifecycle events
+  and MUST NOT depend on logger strings.
+- Text-mode live progress MUST surface:
+  - `run.queued` and `run.running` as run-state lines with full `run_id`
+  - `node.started` as indented root or child node lines using node depth and role
+  - `node.step.started` and `node.step.completed` as step-progress lines
+  - `node.subcall.executed` as architecture lines showing recursive, fallback,
+    or plain execution mode plus duration and child-node linkage when present
+  - `node.action.executed` as continue-action completion or failure lines
+  - `node.completed` and `node.failed` as node-terminal lines
+  - terminal run events as the trigger for the final summary
+- Successful text-mode terminal summary MUST include:
+  - `state`
+  - `run_id`
+  - duration
+  - `events_path`
+  - `final_answer_ref`
+  - full final answer text
+  - readable run-level accounting rollups
+  - accounting artifact reference and path when present
+
+### JSON Compatibility Output Contract
+
+- When `--output json` is requested, successful command output MUST be one JSON
+  object including:
   - `run_id`
   - `state`
   - `final_answer`
   - `final_answer_ref`
   - `accounting`
   - `events_path`
+- The v1 JSON field set and field names MUST remain backward compatible with the
+  existing successful `sigil run start` result payload.
 
 ## Failure Contract
 
@@ -198,12 +237,13 @@ And final evidence references resolve successfully
 When harness finalization executes  
 Then run completes and `run.completed.final_answer_ref` is set.
 
-### Scenario SCN-0013: Prints JSON run summary on successful completion
+### Scenario SCN-0013: Prints human-readable run progress and terminal summary by default
 
 Given run reaches completed terminal state  
 When command returns success  
-Then stdout contains JSON summary with `run_id`, `state`, `final_answer_ref`,
-`events_path`, `final_answer`, and `accounting`.
+Then stdout contains human-readable preflight, progress, and terminal summary
+lines including `state`, `run_id`, `events_path`, `final_answer_ref`,
+`final_answer`, and `accounting`.
 
 ### Scenario SCN-0014: Exits non-zero with typed failure metadata on unrecoverable harness inference or template errors
 
@@ -216,3 +256,24 @@ Then command exits non-zero and failure metadata is typed and deterministic.
 Given deterministic runtime guardrail breach occurs during harness execution  
 When command handles terminal failed run  
 Then command exits non-zero and run.failed contains deterministic guardrail breach metadata.
+
+### Scenario SCN-0016: Prints JSON run summary on successful completion when output json is requested
+
+Given run reaches completed terminal state  
+When command returns success with `--output json`  
+Then stdout contains the compatibility JSON summary with `run_id`, `state`,
+`final_answer_ref`, `events_path`, `final_answer`, and `accounting`.
+
+### Scenario SCN-0017: Shows recursive child-node growth in text output
+
+Given recursive child-node execution occurs during `sigil run start`  
+When text-mode progress is rendered  
+Then stdout includes indented child-node lines and recursive subcall
+architecture progress.
+
+### Scenario SCN-0018: Shows fallback subcall mode in text output when recursion depth is exceeded
+
+Given recursive APIs exceed configured `rlm.max_depth` during `sigil run start`  
+When text-mode progress is rendered  
+Then stdout includes fallback subcall progress showing the fallback execution
+mode.
