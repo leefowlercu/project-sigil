@@ -71,9 +71,9 @@ ledger remains deferred:
 
 ## References
 
-- `PRD-0003: run configuration contract`
-- `PRD-0007: run event envelope and durability contract`
-- `PRD-0011: run start harness execution contract`
-- `PRD-0013: REPL subcall observability contract`
-- `PRD-0016: deterministic runtime governance guardrails specification`
-- `PRD-0017: accounting ledger specification`
+- `PRD-0120: run config core contract`
+- `PRD-0210: run event envelope and durability contract`
+- `PRD-0410: run start command execution contract`
+- `PRD-0440: REPL subcall observability contract`
+- `PRD-0500: deterministic runtime guardrails specification`
+- `PRD-0510: accounting ledger specification`

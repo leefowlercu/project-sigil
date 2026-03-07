@@ -60,6 +60,6 @@ Execution profile selection in v1 is controlled by `run_config.rlm.enabled`:
 ## Related Documents
 
 - [ADR-0009 Go REPL Engine and Runtime Boundary](ADR-0009-sigil-go-repl-engine-and-runtime-boundary.md)
-- [PRD-0011 Run Start Harness Execution Specification](../PRD/PRD-0011-sigil-run-start-harness-execution-specification.md)
-- [PRD-0009 RLM Core Harness Mechanism](../PRD/PRD-0009-sigil-rlm-core-harness-mechanism-specification.md)
-- [PRD-0010 Go REPL Runtime Specification](../PRD/PRD-0010-sigil-go-repl-runtime-specification.md)
+- [PRD-0410 Run Start Command Execution Specification](../PRD/PRD-0410-sigil-run-start-command-execution-specification.md)
+- [PRD-0400 Harness Control Loop Specification](../PRD/PRD-0400-sigil-harness-control-loop-specification.md)
+- [PRD-0430 Go REPL Runtime Specification](../PRD/PRD-0430-sigil-go-repl-runtime-specification.md)

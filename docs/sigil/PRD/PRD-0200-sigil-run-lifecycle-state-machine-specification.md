@@ -1,4 +1,4 @@
-# PRD-0006: Sigil Run Lifecycle State Machine Specification
+# PRD-0200: Sigil Run Lifecycle State Machine Specification
 
 ## Status
 
@@ -24,7 +24,7 @@ contracts.
 
 - Defining app-server read/query/streaming APIs.
 - Defining projection/query contracts.
-- Changing CLI UX contracts in `PRD-0002` or `PRD-0004`.
+- Changing CLI UX contracts in `PRD-0110` or `PRD-0130`.
 
 ## Run Lifecycle States
 

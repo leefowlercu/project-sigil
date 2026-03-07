@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-`sigil` now defines harness-level recursive control behavior in `PRD-0009`, but
+`sigil` now defines harness-level recursive control behavior in `PRD-0400`, but
 it does not yet lock the architecture boundary for how Go REPL execution is
 hosted, isolated by node, and integrated with event contracts.
 
@@ -75,16 +75,16 @@ abstraction boundary.
 ## Migration/Adoption Notes
 
 - Behavior-level REPL runtime contracts and limits are defined in
-  `PRD-0010`.
-- Event payload invariants for action artifacts remain defined by `PRD-0007`.
-- Harness-level recursive behavior remains defined by `PRD-0009`.
+  `PRD-0430`.
+- Event payload invariants for action artifacts remain defined by `PRD-0210`.
+- Harness-level recursive behavior remains defined by `PRD-0400`.
 
 ## Related Documents
 
 - [Sigil ADR Index](README.md)
 - [ADR-0007 LLM Gateway Abstraction](ADR-0007-sigil-llm-gateway-abstraction.md)
 - [ADR-0008 OpenRouter Responses Gateway](ADR-0008-sigil-openrouter-responses-gateway.md)
-- [PRD-0007 Run Event Contract Specification](../PRD/PRD-0007-sigil-run-event-contract-specification.md)
-- [PRD-0009 RLM Core Harness Mechanism Specification](../PRD/PRD-0009-sigil-rlm-core-harness-mechanism-specification.md)
-- [PRD-0010 Go REPL Runtime Specification](../PRD/PRD-0010-sigil-go-repl-runtime-specification.md)
+- [PRD-0210 Run Event Contract Specification](../PRD/PRD-0210-sigil-run-event-contract-specification.md)
+- [PRD-0400 Harness Control Loop Specification](../PRD/PRD-0400-sigil-harness-control-loop-specification.md)
+- [PRD-0430 Go REPL Runtime Specification](../PRD/PRD-0430-sigil-go-repl-runtime-specification.md)
 - [Project Spec Rules](../../../../.agents/rules/SPECS.md)

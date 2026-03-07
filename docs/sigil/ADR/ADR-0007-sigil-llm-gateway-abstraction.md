@@ -65,6 +65,6 @@ adapter` architecture pattern.
 
 - [Sigil ADR Index](README.md)
 - [ADR-0008 OpenRouter Responses Gateway](ADR-0008-sigil-openrouter-responses-gateway.md)
-- [PRD-0003 Run Configuration](../PRD/PRD-0003-sigil-run-config-specification.md)
-- [PRD-0008 LLM Inference via Gateway Specification](../PRD/PRD-0008-sigil-llm-inference-via-gateway-specification.md)
+- [PRD-0120 Run Config Core Specification](../PRD/PRD-0120-sigil-run-config-core-specification.md)
+- [PRD-0300 Inference Gateway Specification](../PRD/PRD-0300-sigil-inference-gateway-specification.md)
 - [Project Spec Rules](../../../../.agents/rules/SPECS.md)

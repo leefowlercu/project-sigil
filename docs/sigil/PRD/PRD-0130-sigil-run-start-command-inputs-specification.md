@@ -1,4 +1,4 @@
-# PRD-0004: Sigil Run Start Config Inputs
+# PRD-0130: Sigil Run Start Command Inputs Specification
 
 ## Status
 
@@ -33,7 +33,7 @@ behavior for command initialization.
   targeting a `sigil` run config file source.
 - `sigil run start` MUST accept repeatable `--var <key=value>` flags for
   template variable injection used by runtime behavior in
-  `PRD-0011-sigil-run-start-harness-execution-specification.md`.
+  `PRD-0410-sigil-run-start-command-execution-specification.md`.
 - Both flags MAY be supplied together.
 
 ## Path Resolution Contract

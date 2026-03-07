@@ -66,6 +66,6 @@ root/child node invariants.
 
 - [Sigil ADR Index](README.md)
 - [ADR-0005 Event-Sourced Run Architecture](ADR-0005-sigil-event-sourced-run-architecture.md)
-- [PRD-0006 Run Lifecycle State Machine Specification](../PRD/PRD-0006-sigil-run-lifecycle-state-machine-specification.md)
-- [PRD-0007 Run Event Contract Specification](../PRD/PRD-0007-sigil-run-event-contract-specification.md)
+- [PRD-0200 Run Lifecycle State Machine Specification](../PRD/PRD-0200-sigil-run-lifecycle-state-machine-specification.md)
+- [PRD-0210 Run Event Contract Specification](../PRD/PRD-0210-sigil-run-event-contract-specification.md)
 - [Project Spec Rules](../../../../.agents/rules/SPECS.md)

@@ -48,4 +48,5 @@ For v1 Priority 1, `sigil` adopts a hard-cutover model-input boundary:
 
 - Changing `sigil.rlm.response.v1` structured response schema.
 - Introducing configurable feedback-preview caps in v1.
-- Altering REPL session lifecycle or guardrail contracts in `PRD-0010`.
+- Altering REPL session lifecycle in `PRD-0430` or guardrail contracts in
+  `PRD-0500`.

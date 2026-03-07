@@ -1,4 +1,4 @@
-# PRD-0002: Sigil Initial CLI Surface
+# PRD-0110: Sigil Initial CLI Surface
 
 ## Status
 
@@ -46,7 +46,7 @@ sigil
 - `sigil` MUST print usage/help and perform no runtime action.
 - `sigil run` MUST print usage/help and perform no runtime action.
 - `sigil run start` behavior is delegated to
-  `PRD-0011-sigil-run-start-harness-execution-specification.md`.
+  `PRD-0410-sigil-run-start-command-execution-specification.md`.
 - `sigil run stop` MUST print usage/help as a usage-only placeholder command.
 - No positional arguments or required flags are defined in this PRD.
 
@@ -55,7 +55,7 @@ sigil
 - `sigil` with no subcommand MUST exit with status code `0`.
 - `sigil run` with no subcommand MUST exit with status code `0`.
 - `sigil run start` exit behavior is defined by
-  `PRD-0011-sigil-run-start-harness-execution-specification.md`.
+  `PRD-0410-sigil-run-start-command-execution-specification.md`.
 - `sigil run stop` usage-only behavior MUST exit with status code `0`.
 
 ## Error Handling Contract
@@ -94,12 +94,12 @@ When a user runs `sigil run`
 Then run-subcommand usage/help is printed and the process exits with status
 code `0`.
 
-### Scenario SCN-0003: Delegates sigil run start behavior to PRD-0011 run-start harness-execution contract
+### Scenario SCN-0003: Delegates sigil run start behavior to PRD-0410 run-start command-execution contract
 
 Given the `sigil` executable is available  
 When a user runs `sigil run start`  
 Then `sigil run start` behavior follows
-`PRD-0011-sigil-run-start-harness-execution-specification.md`.
+`PRD-0410-sigil-run-start-command-execution-specification.md`.
 
 ### Scenario SCN-0004: Provides sigil run stop as a usage-only placeholder command
 

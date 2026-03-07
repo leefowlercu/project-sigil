@@ -1,4 +1,4 @@
-# PRD-0007: Sigil Run Event Contract Specification
+# PRD-0210: Sigil Run Event Contract Specification
 
 ## Status
 
@@ -10,8 +10,12 @@ Accepted
 replayability, and integrity validation in the event-sourced baseline.
 
 This PRD defines the write-path event envelope, event type catalog, payload
-schemas, and per-run durable JSONL storage contract. Query/projection API
-behavior is deferred.
+schemas, ordering rules, and per-run durable JSONL storage contract.
+Query or projection API behavior is deferred.
+
+This PRD owns event structure. Guardrail-specific `run.failed` semantics are
+defined in `PRD-0500`. Accounting schemas and accounting-reference semantics
+are defined in `PRD-0510`.
 
 ## Goals
 
@@ -123,8 +127,8 @@ Additional invariants:
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `output_ref` | No | string | Non-empty when present; SHOULD reference persisted normalized inference output with `schema_id=sigil.rlm.response.v1` |
-| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted node accounting artifact |
+| `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical node accounting artifact defined in `PRD-0510` |
 
 ### `node.failed` payload schema
 
@@ -152,8 +156,8 @@ Additional invariants:
 | `decision` | Yes | string enum | One of: `continue`, `final` |
 | `action_count` | Yes | integer | `>= 0` |
 | `duration_ms` | Yes | integer | `>= 0` |
-| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
-| `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference |
+| `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
+| `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference as defined in `PRD-0510` |
 
 Additional invariants:
 
@@ -201,7 +205,7 @@ Additional invariants:
 
 - `output_ref` MUST resolve to persisted action artifact for the same run,
   node, step, and action index.
-- Canonical `output_ref` artifact reference format is defined in `PRD-0010`.
+- Canonical `output_ref` artifact reference format is defined in `PRD-0430`.
 
 ### `node.subcall.executed` payload schema
 
@@ -220,8 +224,8 @@ Additional invariants:
 | `answer_bytes` | Yes | integer | `>= 0` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `child_node_id` | No | UUIDv7 | Required when `execution_mode=recursive`; forbidden otherwise |
-| `accounting` | Yes | object | MUST satisfy normalized `AccountingSummary` schema |
-| `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference |
+| `accounting` | Yes | object | MUST satisfy `AccountingSummary` defined in `PRD-0510` |
+| `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference as defined in `PRD-0510` |
 | `error_code` | No | string | Required when `status=failed`; forbidden when `status=completed` |
 | `error_message` | No | string | Required when `status=failed`; forbidden when `status=completed` |
 
@@ -232,8 +236,8 @@ Additional invariants:
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `final_answer_ref` | No | string | Non-empty when present; SHOULD reference terminal normalized inference output with `schema_id=sigil.rlm.response.v1` and `validated_payload.decision=final` |
-| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted run accounting artifact |
+| `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
 
 ### `run.failed` payload schema
 
@@ -248,13 +252,15 @@ Additional invariants:
 | `limit_key` | No | string | Non-empty when present |
 | `configured_value` | No | string | Non-empty when present; required when `limit_key` is present |
 | `observed_value` | No | string | Non-empty when present; required when `limit_key` is present |
-| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted run accounting artifact |
+| `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
 
 Additional invariants:
 
 - If `limit_key` is present, `configured_value` and `observed_value` MUST both
   be present and non-empty.
+- Guardrail-specific semantic meaning for `limit_key`, `configured_value`,
+  `observed_value`, and `failed_step_id` is defined in `PRD-0500`.
 
 ### `run.interrupted` payload schema
 
@@ -264,66 +270,8 @@ Additional invariants:
 | `reason` | Yes | string enum | One of: `user_request`, `policy_stop`, `system_shutdown` |
 | `interrupted_by` | No | string | Non-empty when present |
 | `interrupted_node_id` | No | UUIDv7 | Optional |
-| `accounting` | Yes | object | MUST satisfy normalized `AccountingRollup` schema |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference persisted run accounting artifact |
-
-## Normalized Accounting Payload Contract
-
-Accounting surfaces are normalized summary objects, not raw provider payloads.
-All canonical event accounting payloads use USD-only v1 accounting.
-
-### `AccountingSummary`
-
-Leaf summaries and aggregate totals MUST use this schema:
-
-| Field | Required | Type | Invariants |
-| --- | --- | --- | --- |
-| `currency` | Yes | string literal | Must be `usd` |
-| `input_tokens` | No | integer | `>= 0` when present |
-| `output_tokens` | No | integer | `>= 0` when present |
-| `total_tokens` | No | integer | `>= 0` when present; required when `token_status=complete` |
-| `reasoning_tokens` | No | integer | `>= 0` when present |
-| `known_input_cost_microusd` | No | integer | `>= 0` when present |
-| `known_output_cost_microusd` | No | integer | `>= 0` when present |
-| `known_reasoning_cost_microusd` | No | integer | `>= 0` when present |
-| `known_total_cost_microusd` | No | integer | `>= 0` when present; required when `cost_status=complete` |
-| `token_source` | Yes | string enum | One of: `gateway_reported`, `mixed`, `unavailable` |
-| `token_status` | Yes | string enum | One of: `complete`, `partial`, `unavailable` |
-| `cost_source` | Yes | string enum | One of: `gateway_reported`, `fallback_pricing`, `mixed`, `unavailable` |
-| `cost_status` | Yes | string enum | One of: `complete`, `partial`, `unavailable` |
-| `pricing_key` | Yes | object | Includes non-empty `provider` and `model` when known |
-| `pricing_version` | Yes | string | Non-empty |
-| `missing_token_item_count` | Yes | integer | `>= 0`; MUST be `>= 1` when `token_status=unavailable` |
-| `missing_cost_item_count` | Yes | integer | `>= 0`; MUST be `>= 1` when `cost_status=unavailable` |
-
-Additional invariants:
-
-- `complete` status MUST NOT imply unavailable totals.
-- `partial` status MUST preserve known subtotals instead of coercing missing
-  values to zero.
-- `unavailable` status MUST preserve missing-item counts instead of reporting
-  zero-complete totals.
-
-### `AccountingRollup`
-
-Aggregate event payloads MUST use this schema:
-
-| Field | Required | Type | Invariants |
-| --- | --- | --- | --- |
-| `model_total` | Yes | `AccountingSummary` | Direct model-step accounting for the scope |
-| `direct_subcalls_total` | Yes | `AccountingSummary` | Direct subcalls observed within the scope |
-| `tree_total` | Yes | `AccountingSummary` | Full causal total including recursive descendants |
-
-### `accounting_ref`
-
-When present, `accounting_ref` SHOULD resolve to canonical run-output artifact
-locations:
-
-- Run scope: `run-output://run/accounting.json`
-- Node scope: `run-output://node/<node_id>/accounting.json`
-- Step scope: `run-output://node/<node_id>/step/<step_id>/accounting.json`
-- Subcall scope:
-  `run-output://node/<node_id>/step/<step_id>/subcall-<subcall_index>-accounting.json`
+| `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
 
 ## Extensibility Rules
 
@@ -342,6 +290,12 @@ v1 uses strict validation rules:
 - Per-run `seq` MUST be contiguous monotonic integers beginning at `1`.
 - Append operation MUST reject an event when next `seq` is not contiguous.
 - Sequence ordering is authoritative for replay order within a run.
+
+## Failure Ordering Contract
+
+- Failing child nodes MUST emit `node.failed` before the parent records the corresponding failed `node.subcall.executed` item.
+- Failing root nodes MUST emit `node.failed` before the run emits `run.failed`.
+- Child-node failure surfaced as `repl_child_failure` in a parent continue-action path remains non-fatal at run level unless a separate escalation policy terminates the run.
 
 ## Durable Storage Contract
 
@@ -370,8 +324,8 @@ The following payload families are explicitly deferred (not locked in this PRD):
 - Model provider request/response internals (token-level or raw provider
   payloads).
 - Code-execution internals (stdout/stderr chunks, sandbox telemetry).
-- Provider usage/cost telemetry internals beyond normalized accounting
-  summaries.
+- Provider usage/cost telemetry internals beyond accounting schemas defined in
+  `PRD-0510`.
 
 Deferred payload families are out-of-contract for v1 and MUST NOT be introduced
 into canonical v1 payload schemas without a follow-up PRD update.
@@ -535,41 +489,21 @@ Given persisted node lifecycle events for a started node
 When terminal node events are validated  
 Then exactly one of `node.completed` or `node.failed` exists for that node.
 
-### Scenario SCN-0024: Extends run.failed payload with deterministic guardrail metadata fields
+### Scenario SCN-0024: Emits node.failed for recursive child execution failures before parent node.subcall.executed failed record
 
-Given persisted run.failed events for guardrail terminalization  
-When payloads are validated  
-Then optional deterministic guardrail metadata fields are accepted with strict schema rules.
+Given recursive child execution fails  
+When failure events are persisted  
+Then child `node.failed` is emitted before the parent failed `node.subcall.executed` record.
 
-### Scenario SCN-0025: Requires configured_value and observed_value when run.failed limit_key is present
+### Scenario SCN-0025: Emits node.failed for root execution failures before run.failed
 
-Given run.failed payload includes `limit_key`  
-When strict payload validation executes  
-Then `configured_value` and `observed_value` are required and non-empty.
+Given root node execution fails  
+When terminal failure events are persisted  
+Then `node.failed` is emitted before `run.failed`.
 
-### Scenario SCN-0026: Validates failed_step_id as UUIDv7 when present in run.failed payload
+### Scenario SCN-0026: Preserves run continuation when child node.failed is surfaced as repl_child_failure in parent continue action path
 
-Given run.failed payload includes `failed_step_id`  
-When strict payload validation executes  
-Then `failed_step_id` must be UUIDv7.
-
-### Scenario SCN-0027: Includes accounting rollup in successful run summary and terminal events
-
-Given completed terminal run events are persisted  
-When accounting payloads are inspected  
-Then step node and run terminal events include normalized accounting rollups  
-And persisted accounting artifact references remain non-empty when present.
-
-### Scenario SCN-0028: Persists subcall leaf accounting in events and action artifacts
-
-Given subcalls execute within a continue action  
-When canonical event and artifact payloads are inspected  
-Then `node.subcall.executed` and action-artifact `subcalls[]` traces include
-leaf accounting summaries.
-
-### Scenario SCN-0029: Preserves partial accounting status when cost is unavailable
-
-Given terminal or subcall accounting omits one or more cost totals  
-When normalized event payloads are inspected  
-Then accounting preserves `cost_status=partial` or `cost_status=unavailable`
-instead of zero-filling missing cost data.
+Given recursive child execution fails and the failure is surfaced as
+`repl_child_failure` in the parent continue-action path  
+When failure ordering is evaluated  
+Then the child `node.failed` is recorded without immediately forcing run-level failure.

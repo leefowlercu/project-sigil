@@ -60,8 +60,8 @@ reasoning support.
 
 - [Sigil ADR Index](README.md)
 - [ADR-0007 LLM Gateway Abstraction](ADR-0007-sigil-llm-gateway-abstraction.md)
-- [PRD-0003 Run Configuration](../PRD/PRD-0003-sigil-run-config-specification.md)
-- [PRD-0008 LLM Inference via Gateway Specification](../PRD/PRD-0008-sigil-llm-inference-via-gateway-specification.md)
+- [PRD-0120 Run Config Core Specification](../PRD/PRD-0120-sigil-run-config-core-specification.md)
+- [PRD-0300 Inference Gateway Specification](../PRD/PRD-0300-sigil-inference-gateway-specification.md)
 - [OpenRouter Responses API](https://openrouter.ai/docs/api-reference/responses/overview)
 - [OpenRouter Structured Outputs](https://openrouter.ai/docs/guides/structured-outputs)
 - [OpenRouter Response Healing](https://openrouter.ai/docs/features/plugins/response-healing)

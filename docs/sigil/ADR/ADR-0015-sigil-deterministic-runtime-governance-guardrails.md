@@ -62,6 +62,6 @@ They will be added in a later accounting-ledger subsystem delivery.
 
 ## References
 
-- `PRD-0016: deterministic runtime governance guardrails specification`
-- `PRD-0007: run.failed payload contract`
-- `PRD-0009: harness control-loop contract`
+- `PRD-0500: deterministic runtime guardrails specification`
+- `PRD-0210: run.failed payload contract`
+- `PRD-0400: harness control-loop contract`

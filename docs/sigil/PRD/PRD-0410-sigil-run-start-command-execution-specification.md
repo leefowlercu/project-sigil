@@ -1,4 +1,4 @@
-# PRD-0011: Sigil Run Start Harness Execution Specification
+# PRD-0410: Sigil Run Start Command Execution Specification
 
 ## Status
 
@@ -6,7 +6,7 @@ Draft
 
 ## Context
 
-`PRD-0004` defines input-path behavior for `sigil run start`, while runtime
+`PRD-0130` defines input-path behavior for `sigil run start`, while runtime
 execution semantics were previously deferred.
 
 `sigil` now has lifecycle, event, inference, harness, and Go REPL contracts.
@@ -36,8 +36,8 @@ runtime command.
 - Command MUST initialize lifecycle with queued source `cli.run.start` and
   resolved config-path metadata.
 - Command MUST create exactly one root node before first inference step.
-- Harness step processing MUST follow contracts in `PRD-0009` and `PRD-0010`.
-- REPL subcall API behavior and observability MUST follow `PRD-0013`.
+- Harness step processing MUST follow contracts in `PRD-0400` and `PRD-0430`.
+- REPL subcall API behavior and observability MUST follow `PRD-0440`.
 
 ## Prompt and Context Resolution Contract
 
@@ -87,6 +87,7 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
 
 - Root `decision=final` with non-empty answer and resolvable `final.evidence[]`
   refs MUST complete run successfully.
+- Run-level accounting exposure semantics MUST follow `PRD-0510`.
 - Successful command output MUST be one JSON object including:
   - `run_id`
   - `state`
@@ -214,10 +215,3 @@ Then command exits non-zero and failure metadata is typed and deterministic.
 Given deterministic runtime guardrail breach occurs during harness execution  
 When command handles terminal failed run  
 Then command exits non-zero and run.failed contains deterministic guardrail breach metadata.
-
-### Scenario SCN-0016: Includes accounting rollup in successful run summary and terminal events
-
-Given completed harness execution captures normalized accounting  
-When command returns success and terminal events are inspected  
-Then successful CLI JSON summary and terminal run events include accounting
-rollups.

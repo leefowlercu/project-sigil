@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
+
+
+PRD_FILE_RE = re.compile(r"^(PRD-\d{4})-[a-z0-9-]+-specification\.md$")
+PRD_SCENARIO_RE = re.compile(r"^### Scenario (SCN-(\d{4})): (.+)$")
+FEATURE_SCENARIO_RE = re.compile(r"^\s*Scenario: (.+)$")
+
+
+@dataclass(frozen=True)
+class Scenario:
+    prd: str
+    scenario_id: str
+    title: str
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Verify PRD, MATRIX, and acceptance-title consistency.",
+    )
+    parser.add_argument(
+        "--subproject",
+        default="sigil",
+        choices=("sigil",),
+        help="Subproject to verify.",
+    )
+    return parser.parse_args()
+
+
+def parse_prds(prd_dir: Path) -> tuple[list[Scenario], list[str]]:
+    errors: list[str] = []
+    scenarios: list[Scenario] = []
+
+    for path in sorted(prd_dir.glob("PRD-*.md")):
+        match = PRD_FILE_RE.match(path.name)
+        if match is None:
+            errors.append(f"invalid PRD filename: {path}")
+            continue
+
+        prd = match.group(1)
+        expected = 0
+        for line_no, line in enumerate(path.read_text().splitlines(), start=1):
+            scenario_match = PRD_SCENARIO_RE.match(line)
+            if scenario_match is None:
+                continue
+
+            scenario_id = scenario_match.group(1)
+            numeric = int(scenario_match.group(2))
+            title = scenario_match.group(3).strip()
+            if numeric != expected:
+                errors.append(
+                    f"{path}:{line_no} expected SCN-{expected:04d} but found {scenario_id}",
+                )
+                expected = numeric + 1
+            else:
+                expected += 1
+
+            scenarios.append(Scenario(prd=prd, scenario_id=scenario_id, title=title))
+
+    title_counts = Counter(item.title for item in scenarios)
+    for title, count in sorted(title_counts.items()):
+        if count > 1:
+            errors.append(f"duplicate PRD scenario title ({count}): {title}")
+
+    return scenarios, errors
+
+
+def parse_matrix(matrix_path: Path, feature_file: str) -> tuple[list[Scenario], list[str]]:
+    errors: list[str] = []
+    scenarios: list[Scenario] = []
+
+    for line_no, line in enumerate(matrix_path.read_text().splitlines(), start=1):
+        if not line.startswith("| `PRD-"):
+            continue
+
+        columns = [part.strip() for part in line.strip().strip("|").split("|")]
+        if len(columns) != 6:
+            errors.append(f"{matrix_path}:{line_no} expected 6 columns but found {len(columns)}")
+            continue
+
+        prd, scenario_id, prd_title, mapped_feature, feature_title, _note = columns
+        prd = prd.strip("`")
+        scenario_id = scenario_id.strip("`")
+        prd_title = prd_title.strip("`")
+        feature_title = feature_title.strip("`")
+
+        if mapped_feature.strip("`") != feature_file:
+            errors.append(
+                f"{matrix_path}:{line_no} expected feature file {feature_file} but found {mapped_feature}",
+            )
+
+        if prd_title != feature_title:
+            errors.append(
+                f"{matrix_path}:{line_no} PRD title does not match mapped feature title: {prd_title!r} != {feature_title!r}",
+            )
+
+        scenarios.append(Scenario(prd=prd, scenario_id=scenario_id, title=prd_title))
+
+    return scenarios, errors
+
+
+def parse_feature(feature_path: Path) -> tuple[set[str], list[str]]:
+    errors: list[str] = []
+    titles: list[str] = []
+
+    for line in feature_path.read_text().splitlines():
+        match = FEATURE_SCENARIO_RE.match(line)
+        if match is not None:
+            titles.append(match.group(1).strip())
+
+    counts = Counter(titles)
+    for title, count in sorted(counts.items()):
+        if count > 1:
+            errors.append(f"duplicate feature scenario title ({count}): {title}")
+
+    return set(titles), errors
+
+
+def main() -> int:
+    args = parse_args()
+    root = repo_root()
+
+    if args.subproject != "sigil":
+        print(f"unsupported subproject: {args.subproject}", file=sys.stderr)
+        return 2
+
+    prd_dir = root / "docs" / "sigil" / "PRD"
+    matrix_path = prd_dir / "MATRIX.md"
+    feature_path = root / "sigil" / "acceptance" / "features" / "harness.feature"
+    feature_file = "sigil/acceptance/features/harness.feature"
+
+    prd_scenarios, prd_errors = parse_prds(prd_dir)
+    matrix_scenarios, matrix_errors = parse_matrix(matrix_path, feature_file)
+    feature_titles, feature_errors = parse_feature(feature_path)
+
+    errors = [*prd_errors, *matrix_errors, *feature_errors]
+
+    prd_set = set(prd_scenarios)
+    matrix_set = set(matrix_scenarios)
+
+    missing_from_matrix = sorted(prd_set - matrix_set, key=lambda item: (item.prd, item.scenario_id))
+    missing_from_prd = sorted(matrix_set - prd_set, key=lambda item: (item.prd, item.scenario_id))
+
+    for scenario in missing_from_matrix:
+        errors.append(
+            f"missing from MATRIX: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+        )
+    for scenario in missing_from_prd:
+        errors.append(
+            f"missing from PRDs: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+        )
+
+    for scenario in sorted(prd_scenarios, key=lambda item: (item.prd, item.scenario_id)):
+        if scenario.title not in feature_titles:
+            errors.append(
+                f"missing from feature: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+            )
+
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        return 1
+
+    print(
+        "verified sigil specs:",
+        f"prds={len({scenario.prd for scenario in prd_scenarios})}",
+        f"scenarios={len(prd_scenarios)}",
+        f"feature_titles={len(feature_titles)}",
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

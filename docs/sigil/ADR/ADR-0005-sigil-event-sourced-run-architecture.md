@@ -60,13 +60,13 @@ per-run events are the source of truth.
   per-run events as touched.
 - Initial v1 durable format is JSONL; future storage backends may be added if
   they preserve event-sourced source-of-truth semantics.
-- CLI UX contracts in `PRD-0002` and `PRD-0004` remain unchanged in this
+- CLI UX contracts in `PRD-0110` and `PRD-0130` remain unchanged in this
   iteration.
 
 ## Related Documents
 
 - [Sigil ADR Index](README.md)
 - [ADR-0006 Run/Node Identity Model](ADR-0006-sigil-run-node-identity-model.md)
-- [PRD-0006 Run Lifecycle State Machine Specification](../PRD/PRD-0006-sigil-run-lifecycle-state-machine-specification.md)
-- [PRD-0007 Run Event Contract Specification](../PRD/PRD-0007-sigil-run-event-contract-specification.md)
+- [PRD-0200 Run Lifecycle State Machine Specification](../PRD/PRD-0200-sigil-run-lifecycle-state-machine-specification.md)
+- [PRD-0210 Run Event Contract Specification](../PRD/PRD-0210-sigil-run-event-contract-specification.md)
 - [Project Spec Rules](../../../../.agents/rules/SPECS.md)

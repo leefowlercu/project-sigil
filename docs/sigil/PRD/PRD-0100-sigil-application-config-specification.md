@@ -1,4 +1,4 @@
-# PRD-0001: Sigil Application Configuration
+# PRD-0100: Sigil Application Configuration Specification
 
 ## Status
 

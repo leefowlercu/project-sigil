@@ -33,6 +33,11 @@
 - Scenario IDs **MUST** increment from `SCN-0000` within each PRD.
 - PRD scenario titles **SHOULD** match the mapped acceptance scenario title exactly
   to keep traceability mechanical and reviewable.
+- PRD scenario titles **SHOULD** be globally unique within a subproject so
+  title-based traceability remains unambiguous.
+- When multiple PRDs touch the same behavior, exactly one PRD **SHOULD** own the
+  acceptance scenario and the others **SHOULD** reference that owner instead of
+  duplicating the scenario.
 - Subproject `MATRIX.md` files **MUST** include a dedicated scenario ID column.
 - `MATRIX.md` scenario IDs **MUST** match PRD scenario IDs exactly for mapped
   scenarios.

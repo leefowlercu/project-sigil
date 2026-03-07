@@ -27,7 +27,7 @@ implementation choices and behavior-level logging output contracts.
 
 - Structured logging output MUST use `slog` JSON handler behavior.
 - Logging output target behavior is specified as a product behavior contract in
-  `PRD-0005-sigil-application-logging-specification.md`.
+  `PRD-0140-sigil-application-logging-specification.md`.
 - This ADR defines the implementation framework requirement and does not replace
   PRD acceptance behavior.
 
@@ -53,5 +53,5 @@ implementation choices and behavior-level logging output contracts.
 ## Related Documents
 
 - [Sigil ADR Index](README.md)
-- [PRD-0005 Application Logging Specification](../PRD/PRD-0005-sigil-application-logging-specification.md)
+- [PRD-0140 Application Logging Specification](../PRD/PRD-0140-sigil-application-logging-specification.md)
 - [Project Spec Rules](../../../../.agents/rules/SPECS.md)
