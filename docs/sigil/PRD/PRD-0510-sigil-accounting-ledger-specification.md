@@ -23,10 +23,11 @@ This PRD owns:
 - Define fallback-pricing behavior when gateways omit cost.
 - Define provenance and completeness metadata so mixed-fidelity totals remain auditable.
 - Define canonical event, artifact, and CLI exposure for accounting data.
+- Define the stable `tree_total` accounting surface consumed by runtime budget guardrails.
 
 ## Non-Goals
 
-- Enforcing token-budget or cost-budget guardrails in this phase
+- defining per-node or per-step accounting budgets
 - supporting non-USD currencies in this release
 - defining raw provider usage payload storage as part of the canonical event contract
 
@@ -178,13 +179,18 @@ schema and accounting exposure semantics on those runtime surfaces.
 - Successful CLI output in both text and JSON modes MUST include the same
   run accounting rollup surfaced in `run.completed`.
 
-## Deferred Contract
+## Guardrail Integration Contract
 
-The accounting ledger is the required precursor for later enforcement, but
-guardrail enforcement is deferred in this PRD:
-
-- `max_total_tokens`
-- `max_total_cost_usd`
+- `PRD-0500` owns budget configuration, deterministic enforcement, and
+  `run.failed` limit metadata for `max_total_tokens` and `max_total_cost_usd`.
+- This PRD owns the accounting ledger semantics those guardrails evaluate.
+- `max_total_tokens` consumes `tree_total.total_tokens` and requires
+  `tree_total.token_status=complete`.
+- `max_total_cost_usd` consumes `tree_total.known_total_cost_microusd` and
+  requires `tree_total.cost_status=complete`.
+- When an active accounting budget fails closed, `run.failed.accounting`
+  remains the full source of truth for partial or unavailable totals and
+  provenance.
 
 ## Acceptance Scenarios
 

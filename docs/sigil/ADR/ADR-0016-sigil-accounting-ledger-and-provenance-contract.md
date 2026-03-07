@@ -43,14 +43,11 @@ following contract:
   - `tree_total`
 - Recursive accounting contributes to ancestor `tree_total` rollups without
   being double-counted as direct model work.
-
-## Deferred
-
-The accounting ledger is delivered now, but guardrail enforcement based on that
-ledger remains deferred:
-
-- `max_total_tokens`
-- `max_total_cost_usd`
+- Runtime guardrails consume run `tree_total` accounting for:
+  - `max_total_tokens`
+  - `max_total_cost_usd`
+- Active accounting budgets fail closed whenever the required `tree_total`
+  token or cost totals are partial or unavailable.
 
 ## Consequences
 
@@ -59,8 +56,8 @@ ledger remains deferred:
 - Run, node, step, and subcall totals become auditable.
 - Partial and unavailable costs remain machine-detectable instead of appearing
   falsely exact.
-- Future token and cost guardrails can enforce against a stable accounting
-  contract without redesigning runtime events or artifacts.
+- Token and cost guardrails can enforce against a stable accounting contract
+  without redesigning runtime events or artifacts.
 
 ### Negative
 

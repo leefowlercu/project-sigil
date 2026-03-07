@@ -22,8 +22,15 @@ harness:
 - `max_total_steps_per_run`
 - `max_run_duration_ms`
 - `max_consecutive_step_failures`
+- `max_total_tokens`
+- `max_total_cost_usd`
 
 These are configured via run config under `guardrails.*` and include defaults.
+
+`max_total_tokens` and `max_total_cost_usd` are run-scoped accounting budgets
+evaluated against cumulative run `tree_total` ledger totals. They are disabled
+when omitted. Under an active accounting budget, partial or unavailable totals
+fail closed.
 
 When any guardrail is breached, harness execution terminalizes the run as
 `failed` with typed metadata:
@@ -37,15 +44,6 @@ When any guardrail is breached, harness execution terminalizes the run as
 Guardrails are enforced identically in recursive and non-recursive execution
 profiles.
 
-## Deferred
-
-Token and cost guardrails are explicitly deferred in this phase:
-
-- `max_total_tokens`
-- `max_total_cost_usd`
-
-They will be added in a later accounting-ledger subsystem delivery.
-
 ## Consequences
 
 ### Positive
@@ -53,12 +51,16 @@ They will be added in a later accounting-ledger subsystem delivery.
 - Deterministic, bounded harness execution.
 - Better failure diagnostics for policy-stop terminalization.
 - Stronger operational safety in long-running recursive workloads.
+- Deterministic token and cost budget enforcement without losing the causative
+  accounting sample.
 
 ### Negative
 
 - Additional runtime accounting complexity in harness execution paths.
 - Existing runs that relied on effectively unbounded loops now fail earlier
   under explicit policy.
+- Active accounting budgets can now terminate runs when ledger totals are
+  partial or unavailable.
 
 ## References
 
