@@ -41,7 +41,7 @@ log_dir: <string>
 ## Default Values
 
 - `log_level`: `info`
-- `log_dir`: `./sigil/logs`
+- `log_dir`: `./.sigil/logs`
 
 ## Environment Namespace Contract
 
@@ -91,7 +91,7 @@ Then the default file is `./sigil.yaml`, format is YAML, and baseline keys are
 Given missing or partial baseline key values in `sigil.yaml` and optional
 `SIGIL_LOG_LEVEL`/`SIGIL_LOG_DIR` environment values  
 When application configuration is merged  
-Then defaults are `log_level=info` and `log_dir=./sigil/logs`, and environment
+Then defaults are `log_level=info` and `log_dir=./.sigil/logs`, and environment
 values override file/default values.
 
 ### Scenario SCN-0002: Rejects unsupported log_level values

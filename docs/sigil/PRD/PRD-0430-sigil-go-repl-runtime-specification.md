@@ -85,6 +85,7 @@ defined in `PRD-0420`.
   - `run-artifact://node/<node_id>/step/<step_id>/action-<action_index>.json`
 - Canonical storage path mapped from this reference is:
   - `./.sigil/runs/<run_id>/artifacts/node/<node_id>/step/<step_id>/action-<action_index>.json`
+- REPL runtime MUST expose read-only exact artifact recovery through `read_action_output(output_ref)` for canonical current-run references only.
 - Artifact payload MUST include:
   - run, node, step, and action identity
   - `action_type`
@@ -126,6 +127,7 @@ REPL runtime MUST use machine-readable error codes including:
 - `repl_execution_compile`
 - `repl_execution_runtime`
 - `repl_artifact_persist`
+- `repl_action_output_read`
 
 ## Deferred Contracts
 
@@ -219,3 +221,9 @@ Then structured compile diagnostics are stored in `error_detail` when parseable.
 Given structured compile diagnostics are available  
 When runtime exposes diagnostic information  
 Then `node.action.executed` payload shape remains unchanged and diagnostics appear only in the artifact and downstream feedback surfaces.
+
+### Scenario SCN-0014: Returns exact action output fields from canonical current-run output_ref via read_action_output
+
+Given a canonical current-run action artifact reference  
+When `read_action_output` resolves that `output_ref` in REPL runtime  
+Then exact action status stdout stderr and typed error fields are returned.

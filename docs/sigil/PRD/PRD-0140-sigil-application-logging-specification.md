@@ -42,7 +42,7 @@ This PRD defines behavior-level logging output and file target contracts.
 - If `log_dir` is relative, path resolution MUST follow `PRD-0100` rules
   (relative to current working directory).
 - With default `PRD-0100` application config values, the default log file path
-  MUST be `./sigil/logs/sigil.log`.
+  MUST be `./.sigil/logs/sigil.log`.
 
 ## Initialization Failure Contract
 
@@ -77,7 +77,7 @@ Then records are emitted in structured JSON format.
 
 Given default `PRD-0100` application configuration values  
 When logging is initialized  
-Then the effective log target path is `./sigil/logs/sigil.log`.
+Then the effective log target path is `./.sigil/logs/sigil.log`.
 
 ### Scenario SCN-0003: Fails initialization when derived log file path cannot be opened as a file sink
 

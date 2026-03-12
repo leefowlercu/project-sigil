@@ -127,6 +127,7 @@ This PRD owns:
   - completed subcalls
   - failed subcalls
 - Action artifacts remain the source of truth for full stdout and stderr.
+- Exact action output recovery, when needed, MUST occur through REPL-side `read_action_output(output_ref)` rather than widening `previous_action_feedback`.
 
 ## User-Turn Artifact Contract
 
@@ -147,6 +148,7 @@ This PRD owns:
 - Dynamic feedback cap tuning by run config
 - additional context metadata shapes for non-string context types
 - richer feedback channels beyond bounded previews and compile diagnostics
+- exposing full action artifact payloads directly in `previous_action_feedback`
 
 ## Acceptance Scenarios
 
@@ -246,3 +248,9 @@ Then `execution_state` includes depth step-budget and recursion-permission metad
 Given a prior continue action executed one or more subcalls  
 When subsequent step input is constructed  
 Then `previous_action_feedback.subcall_summary` includes deterministic counts by execution mode and status.
+
+### Scenario SCN-0016: Preserves bounded previous_action_feedback previews while exact action output remains recoverable through read_action_output
+
+Given a node step after a continue action has executed  
+When bounded feedback is exposed to the model and REPL  
+Then previews remain bounded and exact action output remains recoverable through `read_action_output(output_ref)`.
