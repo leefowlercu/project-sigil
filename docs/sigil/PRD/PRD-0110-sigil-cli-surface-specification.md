@@ -1,4 +1,4 @@
-# PRD-0110: Sigil Initial CLI Surface
+# PRD-0110: Sigil CLI Surface Specification
 
 ## Status
 
@@ -6,64 +6,80 @@ Accepted
 
 ## Context
 
-`sigil` requires a stable initial command-line surface so users and downstream
-integrations can discover command structure while run lifecycle behavior evolves.
+`sigil` requires a stable command-line surface so users and downstream
+integrations can discover execution, control, and inspection entrypoints
+without inferring command structure from implementation details.
 
-This PRD defines the external CLI command tree contract and usage behavior for
-the root and parent command surface.
+This PRD defines the external CLI command tree, inherited flags, and delegated
+behavior ownership for the root and run parent command surfaces.
 
 ## Goals
 
-- Define the initial `sigil` executable command tree.
-- Define the global CLI output-format flag inherited by descendant commands.
-- Define observable behavior for root and parent commands and delegated command
-  entrypoints.
-- Define initial exit code behavior for usage-only command paths.
+- Define the `sigil` executable command tree.
+- Define inherited CLI flags available across the command tree.
+- Define observable behavior for root and parent command entrypoints.
+- Define delegation boundaries for run start, stop, and inspection commands.
 - Define error handling expectations for unknown or invalid subcommands.
 
 ## Non-Goals
 
-- Defining run lifecycle execution behavior internals for `run start` or
-  `run stop`.
-- Defining `run stop` positional-argument or execution semantics beyond
-  delegation.
+- Defining run lifecycle execution internals for `run start`.
+- Defining stop transport internals for `run stop`.
+- Defining read-model field semantics beyond delegated inspection PRDs.
 - Defining custom error strings beyond Cobra default behavior.
 
 ## CLI Surface Contract
 
-The initial CLI surface MUST be:
+The CLI surface MUST be:
 
 ```text
 sigil
-└── run
+└── run [--run-dir <path>]
     ├── start
-    └── stop
+    ├── stop
+    ├── list
+    ├── status <run-id>
+    ├── inspect <run-id>
+    └── events <run-id>
 ```
 
 - Executable name MUST be `sigil`.
 - `run` MUST be a subcommand of the root command.
-- `start` and `stop` MUST be subcommands of `run`.
+- `start`, `stop`, `list`, `status`, `inspect`, and `events` MUST be
+  subcommands of `run`.
 
-## Global Output Flag Contract
+## Inherited Flag Contract
 
 - `sigil` MUST accept a persistent `-o, --output <text|json>` flag.
-- The root output flag MUST be inherited by `sigil run`, `sigil run start`, and
-  `sigil run stop`.
+- The root output flag MUST be inherited by `sigil run` and all run
+  subcommands.
 - The default output format MUST be `text`.
 - `json` output mode is compatibility mode for command result payloads only.
 - Help, usage, and Cobra-generated error surfaces MUST remain human-readable
   text even when `--output json` is present.
+- `sigil run` MUST accept a persistent `--run-dir <path>` flag.
+- The `run` parent `--run-dir` flag MUST be inherited by all run subcommands.
+- When `--run-dir` is omitted, run commands MUST fall back to the default run
+  storage directory owned by the runtime layer.
+- `--run-dir` is scoped to the `run` command tree and MUST NOT be introduced as
+  a root-global flag in v1.
 
 ## Command Behavior Contract
 
 - `sigil` MUST print usage/help and perform no runtime action.
 - `sigil run` MUST print usage/help and perform no runtime action.
 - `sigil run start` behavior is delegated to
+  `PRD-0130-sigil-run-start-command-inputs-specification.md` and
   `PRD-0410-sigil-run-start-command-execution-specification.md`.
 - `sigil run stop` behavior is delegated to
   `PRD-0150-sigil-run-stop-command-inputs-specification.md` and
   `PRD-0450-sigil-run-stop-command-execution-specification.md`.
-- No positional arguments or required flags are defined in this PRD.
+- `sigil run list`, `sigil run status`, `sigil run inspect`, and
+  `sigil run events` behavior is delegated to
+  `PRD-0160-sigil-run-inspection-command-specification.md` and
+  `PRD-0220-sigil-run-projection-and-query-specification.md`.
+- No positional arguments or required flags are defined for `sigil` or
+  `sigil run` in this PRD.
 
 ## Exit Code Contract
 
@@ -73,6 +89,9 @@ sigil
   `PRD-0410-sigil-run-start-command-execution-specification.md`.
 - `sigil run stop` exit behavior is defined by
   `PRD-0450-sigil-run-stop-command-execution-specification.md`.
+- `sigil run list`, `sigil run status`, `sigil run inspect`, and
+  `sigil run events` exit behavior is defined by
+  `PRD-0160-sigil-run-inspection-command-specification.md`.
 
 ## Error Handling Contract
 
@@ -83,10 +102,11 @@ sigil
 
 ## Deferred Contracts
 
-The following are explicitly deferred to a future PRD:
+The following are explicitly deferred to future PRDs:
 
 - Lifecycle, event, and interruption internals owned by runtime lifecycle and
   event PRDs.
+- Remote or app-server command surfaces.
 
 ## Acceptance Scenarios
 
@@ -109,11 +129,12 @@ When a user runs `sigil run`
 Then run-subcommand usage/help is printed and the process exits with status
 code `0`.
 
-### Scenario SCN-0003: Delegates sigil run start behavior to PRD-0410 run-start command-execution contract
+### Scenario SCN-0003: Delegates sigil run start behavior to PRD-0130 and PRD-0410 run-start contracts
 
 Given the `sigil` executable is available  
 When a user runs `sigil run start`  
 Then `sigil run start` behavior follows
+`PRD-0130-sigil-run-start-command-inputs-specification.md` and
 `PRD-0410-sigil-run-start-command-execution-specification.md`.
 
 ### Scenario SCN-0004: Delegates sigil run stop behavior to PRD-0150 and PRD-0450 run-stop contracts
@@ -136,3 +157,17 @@ Given the `sigil` executable is available
 When a user runs `sigil --output json` or `sigil run --output json`  
 Then root and run help surfaces remain human-readable text  
 And the process exits with status code `0`.
+
+### Scenario SCN-0007: Exposes run inspection subcommands under sigil run
+
+Given the `sigil` executable is available  
+When a user inspects `sigil run --help`  
+Then the command surface exposes `list`, `status`, `inspect`, and `events`
+subcommands.
+
+### Scenario SCN-0008: Inherits run storage override flag across sigil run subcommands
+
+Given the `sigil` executable is available  
+When a user inspects `sigil run --help` or one of its subcommands  
+Then the run-subcommand surface documents inherited `--run-dir <path>`
+behavior.

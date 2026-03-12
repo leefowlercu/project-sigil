@@ -6,18 +6,19 @@ Accepted
 
 ## Context
 
-`sigil run start` needs a baseline input contract for selecting application and
-run configuration files while run engine behavior is still evolving.
+`sigil run start` needs a stable input contract for selecting configuration
+files, template variables, and run storage location before runtime execution
+begins.
 
-This PRD defines baseline config-path flags, path resolution, and validation
+This PRD defines baseline run-start flags, path resolution, and validation
 behavior for command initialization.
 
 ## Goals
 
 - Define baseline `sigil run start` config-path flags.
-- Define default config source paths when flags are omitted.
-- Define precedence and coexistence behavior when one or both flags are passed.
-- Define baseline path validation and error behavior.
+- Define inherited run-storage selection behavior for `sigil run start`.
+- Define precedence and coexistence behavior when multiple inputs are passed.
+- Define baseline validation and failure behavior before run execution begins.
 
 ## Non-Goals
 
@@ -33,10 +34,12 @@ behavior for command initialization.
   targeting a `sigil` run config file source.
 - `sigil run start` MUST accept inherited `-o, --output <text|json>` values
   from the root CLI surface defined in `PRD-0110`.
+- `sigil run start` MUST accept inherited `--run-dir <path>` values from the
+  `sigil run` parent command.
 - `sigil run start` MUST accept repeatable `--var <key=value>` flags for
   template variable injection used by runtime behavior in
   `PRD-0410-sigil-run-start-command-execution-specification.md`.
-- Both flags MAY be supplied together.
+- Both config-path flags MAY be supplied together.
 
 ## Path Resolution Contract
 
@@ -44,11 +47,15 @@ behavior for command initialization.
   to `./sigil.yaml`.
 - When `--run-config` is omitted, the resolved run config path MUST default to
   `./sigil-run.yaml`.
+- When inherited `--run-dir` is omitted, the resolved run storage base
+  directory MUST default to `./.sigil/runs`.
 - When `--config` is provided, it MUST override only the application config
   path.
 - When `--run-config` is provided, it MUST override only the run config path.
-- Merge/selection precedence for path sources MUST be: explicit flag value, then
-  command default.
+- When inherited `--run-dir` is provided, it MUST override only the run
+  storage base directory.
+- Merge and selection precedence for path inputs MUST be: explicit flag value,
+  then command default.
 
 ## Validation and Error Contract
 
@@ -59,10 +66,8 @@ behavior for command initialization.
   `--run-config` is explicitly provided.
 - When `--run-config` is omitted, a missing default `./sigil-run.yaml` MUST be
   allowed as long as run configuration merge and validation rules still pass.
-- If the resolved application configuration path is missing, unreadable, or not
-  a regular file, `sigil run start` MUST fail with non-zero exit.
-- If an explicitly provided `--run-config` path is missing, unreadable, or not
-  a regular file, `sigil run start` MUST fail with non-zero exit.
+- An explicitly provided inherited `--run-dir` value MUST NOT be empty or
+  whitespace-only.
 - A `--var` entry MUST include one non-empty key and one value separated by the
   first `=` character.
 - Invalid `--var` entries MUST fail command validation with non-zero exit.
@@ -145,5 +150,18 @@ Then the last provided value for each duplicate key is used.
 
 Given `sigil run start` receives an inherited `--output` value outside
 `text|json`  
+When command input validation runs  
+Then command validation fails with non-zero exit before run execution begins.
+
+### Scenario SCN-0009: Overrides default run storage base directory with inherited --run-dir for sigil run start
+
+Given `sigil run start` receives inherited `--run-dir <path>`  
+When command inputs are resolved  
+Then the effective run storage base directory uses `<path>`.
+
+### Scenario SCN-0010: Rejects explicit empty inherited --run-dir value for sigil run start
+
+Given `sigil run start` receives inherited `--run-dir` with an empty or
+whitespace-only value  
 When command input validation runs  
 Then command validation fails with non-zero exit before run execution begins.

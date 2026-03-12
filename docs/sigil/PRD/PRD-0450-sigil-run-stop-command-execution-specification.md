@@ -6,17 +6,20 @@ Draft
 
 ## Context
 
-`sigil run start` is a blocking local CLI process, but the runtime already owns
-durable run state, interruption events, and partial accounting semantics.
+`sigil run start` executes as a blocking foreground CLI process, while the
+runtime already owns durable run state, interruption events, and partial
+accounting semantics.
 
 `sigil run stop` needs a first-class execution contract that can gracefully
-stop an in-progress local CLI run without introducing app-server control APIs in
-v1.
+stop an in-progress local CLI run selected from the effective run storage
+directory without introducing app-server control APIs in v1.
 
 ## Goals
 
-- Define `sigil run stop` as a local graceful-stop command for CLI-started runs.
+- Define `sigil run stop` as a local graceful-stop command for CLI-started
+  runs.
 - Define the v1 PID-and-signal control transport and auxiliary control files.
+- Define selected run-directory targeting behavior for local stop control.
 - Define wait-to-terminal behavior and success output semantics for text and
   JSON modes.
 - Define user-stop interruption behavior for active and startup-window runs.
@@ -24,23 +27,27 @@ v1.
 ## Non-Goals
 
 - Defining app-server or remote run-control APIs.
-- Defining run discovery or list/query commands.
 - Defining non-Unix transport behavior in v1.
+- Defining inspection or projection output semantics beyond targeted stop
+  behavior.
 
 ## Command Runtime Contract
 
-- `sigil run stop` MUST target local runs stored under `./.sigil/runs/<run-id>/`.
-- The event log at `./.sigil/runs/<run-id>/events.jsonl` MUST remain the source
-  of truth for run state.
-- `sigil run stop` MUST load and validate `events.jsonl` before deciding whether
-  a stop request is needed.
+- `sigil run stop` MUST target local runs stored under
+  `<run-dir>/<run-id>/`, where `<run-dir>` is the inherited selected run
+  directory or the default `./.sigil/runs`.
+- The event log at `<run-dir>/<run-id>/events.jsonl` MUST remain the source of
+  truth for run state.
+- `sigil run stop` MUST load and validate `events.jsonl` before deciding
+  whether a stop request is needed.
 - If the run is already terminal (`completed`, `failed`, or `interrupted`), the
   command MUST return success without issuing a new stop request.
 - If the run is non-terminal, the command MUST write
-  `./.sigil/runs/<run-id>/stop-request.json` before sending `SIGTERM` to the
-  active process.
+  `<run-dir>/<run-id>/stop-request.json` before sending `SIGTERM` to the active
+  process.
 - Before signaling a non-terminal run, `sigil run stop` MUST validate that
-  `process.json` still identifies the original live process for that run.
+  `<run-dir>/<run-id>/process.json` still identifies the original live process
+  for that run.
 - After sending `SIGTERM`, the command MUST wait until a terminal run state is
   observed in `events.jsonl`.
 
@@ -70,8 +77,8 @@ v1.
 ## Control Transport and Metadata Contract
 
 - v1 stop transport MUST be Unix-like only and use `SIGTERM`.
-- `sigil run start` MUST publish `./.sigil/runs/<run_id>/process.json` once the
-  run is created, with:
+- `sigil run start` MUST publish `<run-dir>/<run_id>/process.json` once the run
+  is created, with:
   - `run_id`
   - `pid`
   - `recorded_at`
@@ -129,7 +136,6 @@ v1.
 The following are explicitly deferred to future PRDs:
 
 - Remote stop transport and app-server control APIs.
-- Run discovery or list/query commands.
 - Windows or non-signal transport behavior.
 
 ## Acceptance Scenarios
@@ -159,14 +165,16 @@ And the JSON stop result contains `stop_requested=false`.
 ### Scenario SCN-0003: Waits for terminal state and reports completed or failed JSON results when stop loses the race under output json
 
 Given a stop request is issued for a local CLI run  
-When the target run reaches `completed` or `failed` before interruption is persisted under `--output json`  
+When the target run reaches `completed` or `failed` before interruption is
+persisted under `--output json`  
 Then the command exits with status code `0`  
 And the JSON stop result contains `stop_requested=true` and the observed
 terminal `state`.
 
 ### Scenario SCN-0004: Fails run stop for unknown runs corrupt event logs or stale process metadata on non-terminal runs
 
-Given `sigil run stop` targets an unknown run corrupt event log or non-terminal run with missing or stale process metadata  
+Given `sigil run stop` targets an unknown run corrupt event log or non-terminal
+run with missing or stale process metadata  
 When the command validates local control state  
 Then the command exits non-zero.
 
