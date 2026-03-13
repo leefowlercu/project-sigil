@@ -6,7 +6,7 @@ Draft
 
 ## Context
 
-`sigil` already persists canonical run events, output refs, accounting refs,
+`sigil` already persists canonical run events, artifact refs, accounting refs,
 and local control metadata under the run storage directory.
 
 Operators need a first-class CLI surface for listing runs, checking one run's

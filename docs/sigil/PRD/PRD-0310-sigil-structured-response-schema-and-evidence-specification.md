@@ -89,11 +89,10 @@ Schema invariants:
 ## Evidence Resolution Contract
 
 - `final.evidence[].ref` MUST resolve before node completion.
-- Accepted canonical schemes in this release are:
-  - `run-output://...`
+- Accepted canonical scheme in this release is:
   - `run-artifact://...`
-- When final evidence cites a prior action artifact surfaced via `previous_action_feedback.output_ref`, the cited ref MUST match the provided `output_ref` byte-for-byte.
-- If exact reuse of `previous_action_feedback.output_ref` is not possible, final evidence MUST cite `context_ref` instead of synthesizing a new `run-artifact://...` ref.
+- When final evidence cites a prior action artifact surfaced via `previous_action_feedback.action_ref`, the cited ref MUST match the provided `action_ref` byte-for-byte.
+- If exact reuse of `previous_action_feedback.action_ref` is not possible, final evidence MUST cite `context_ref` instead of synthesizing a new artifact ref.
 - Unresolvable refs MUST fail finalization with typed output-validation behavior.
 
 ## Final Output Persistence Contract
@@ -187,10 +186,10 @@ Given a payload validated against `sigil.llm.answer.v1`
 When strict schema validation runs  
 Then `answer` is required and non-empty.
 
-### Scenario SCN-0011: Exposes canonical and resolvable evidence references through context_ref and previous_action_feedback.output_ref
+### Scenario SCN-0011: Exposes canonical and resolvable evidence references through context_ref and previous_action_feedback.action_ref
 
 Given a step context with `context_ref` and a prior action with
-`previous_action_feedback.output_ref`  
+`previous_action_feedback.action_ref`  
 When evidence references are evaluated  
 Then those refs are canonical and resolvable.
 
@@ -206,11 +205,11 @@ Given a final payload cites an unresolvable evidence ref
 When node finalization runs  
 Then finalization fails with typed output-validation metadata.
 
-### Scenario SCN-0014: Accepts final evidence references for canonical run-output and run-artifact schemes
+### Scenario SCN-0014: Accepts final evidence references for the canonical artifact scheme
 
-Given a final payload cites canonical `run-output://...` or `run-artifact://...` refs  
+Given a final payload cites canonical `run-artifact://...` refs  
 When evidence validation runs  
-Then those schemes are accepted.
+Then that scheme is accepted.
 
 ### Scenario SCN-0015: Persists enriched final-answer artifact with answer evidence and optional confidence
 
@@ -218,11 +217,11 @@ Given a final payload passes validation
 When final-answer persistence runs  
 Then the persisted artifact contains answer, evidence, and optional confidence.
 
-### Scenario SCN-0016: Requires byte-for-byte previous_action_feedback.output_ref reuse with context_ref fallback for final evidence citations
+### Scenario SCN-0016: Requires byte-for-byte previous_action_feedback.action_ref reuse with context_ref fallback for final evidence citations
 
 Given final evidence cites a prior action artifact  
 When evidence refs are constructed or validated  
-Then `previous_action_feedback.output_ref` is reused byte-for-byte, or
+Then `previous_action_feedback.action_ref` is reused byte-for-byte, or
 `context_ref` is used as fallback instead of synthesizing a new artifact ref.
 
 ### Scenario SCN-0017: Maintains inference schema_id sigil.rlm.response.v1 after schema extension

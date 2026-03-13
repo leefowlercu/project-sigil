@@ -58,6 +58,8 @@ creating a second persisted source of truth.
   - `stop_requested`
   - `final_answer_ref` when present
   - `accounting_ref` when present
+- `final_answer_ref` and `accounting_ref` SHOULD be exposed as canonical
+  artifact refs rather than inline terminal artifact bodies.
 - `pid_status` MUST be one of:
   - `current`
   - `missing`

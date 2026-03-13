@@ -47,7 +47,7 @@ The node-local Go REPL runtime MUST expose:
 - `rlm_query(prompt string, context string) (string, error)`
 - `llm_query_batched(calls []map[string]string) ([]map[string]string, error)`
 - `rlm_query_batched(calls []map[string]string) ([]map[string]string, error)`
-- `read_action_output(output_ref string) (ActionOutput, error)`
+- `read_action_artifact(action_ref string) (ActionOutput, error)`
 
 Batched call-item input keys MUST be:
 
@@ -75,7 +75,7 @@ Batched result-item keys MUST be:
 - Successful child-node `final` output MUST be returned to the caller REPL context.
 - `llm_query_batched` MUST execute bounded-parallel fan-out and preserve input order in output results.
 - `rlm_query_batched` MUST execute sequentially and preserve input order in output results.
-- `read_action_output` MUST resolve exact action output fields from a canonical current-run `output_ref`.
+- `read_action_artifact` MUST resolve exact action output fields from a canonical current-run `action_ref`.
 - After a small-context node has already executed recursive subcalls in a prior continue step, subsequent `rlm_query` and `rlm_query_batched` invocations in that same node MUST fall back to plain subcall behavior instead of creating additional child nodes.
 - Recursive APIs (`rlm_query`, `rlm_query_batched`) MUST execute each subcall with an independent `300s` timeout budget derived from run-scoped context, decoupled from parent action elapsed timeout and ancestor recursive subcall deadline depletion across levels.
 - Recursive subcalls MUST still honor run-context cancellation.
@@ -121,7 +121,7 @@ Batched result-item keys MUST be:
 - Per-call model override fields in subcall APIs
 - extended batched payload schemas beyond `prompt` and `context`
 - richer recursive scheduling policies beyond sequential recursive batching
-- widening `read_action_output` beyond the narrow `ActionOutput` surface
+- widening `read_action_artifact` beyond the narrow `ActionOutput` surface
 
 ## Acceptance Scenarios
 
@@ -233,8 +233,8 @@ Given a small-context node has already executed recursive subcalls in a prior co
 When `rlm_query` is invoked in a subsequent step of that same node  
 Then plain subcall behavior is used instead of creating another child node.
 
-### Scenario SCN-0018: Exposes read_action_output helper in node-local REPL session
+### Scenario SCN-0018: Exposes read_action_artifact helper in node-local REPL session
 
 Given an initialized node-local Go REPL session  
 When REPL bindings are inspected  
-Then `read_action_output` is available.
+Then `read_action_artifact` is available.

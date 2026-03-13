@@ -31,6 +31,8 @@ per-run events are the source of truth.
 - Runtime source of truth MUST be append-only per-run events.
 - Projections/read models MUST be derived from events and are not source of
   truth.
+- Durable non-event run records MUST be treated as artifacts rather than as a
+  second source of truth.
 - v1 durable store default MUST be JSONL in a per-run directory under
   `./.sigil/runs`.
 - Event ordering MUST rely on per-run contiguous `seq` values.
@@ -49,6 +51,7 @@ per-run events are the source of truth.
 ## Consequences
 
 - Runtime history becomes replayable and auditable by construction.
+- Non-event durable records remain queryable without weakening event authority.
 - Future app-server and UI read models can be implemented as projections over a
   stable write-path contract.
 - Sequence integrity becomes explicit and testable.

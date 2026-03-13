@@ -19,7 +19,7 @@ The project requires a stable v1 architecture that supports:
 - Deterministic node-local REPL state across continue steps.
 - Recursive subcalls via `rlm_query` without coupling harness logic to one REPL
   engine implementation.
-- Durable action-output references in runtime events.
+- Durable action-artifact references in runtime events.
 - A clear migration path to stricter sandboxing in a later version.
 
 ## Decision
@@ -42,7 +42,7 @@ abstraction boundary.
   `SessionFactory`) so the engine can be replaced without changing harness
   contracts.
 - REPL action execution artifacts MUST be persisted under run-local storage and
-  referenced via `node.action.executed.output_ref`.
+  referenced via `node.action.executed.action_ref`.
 - Fixed v1 runtime timeout budgets are:
   - REPL action timeout: `180s`
   - Recursive REPL subcall timeout: `300s`

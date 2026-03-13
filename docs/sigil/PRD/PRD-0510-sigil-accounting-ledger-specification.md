@@ -163,10 +163,10 @@ Canonical runtime surfaces MUST expose accounting as follows:
 
 Canonical accounting artifact locations are:
 
-- `run-output://run/accounting.json`
-- `run-output://node/<node_id>/accounting.json`
-- `run-output://node/<node_id>/step/<step_id>/accounting.json`
-- `run-output://node/<node_id>/step/<step_id>/subcall-<subcall_index>-accounting.json`
+- `run-artifact://run/accounting.json`
+- `run-artifact://node/<node_id>/accounting.json`
+- `run-artifact://node/<node_id>/step/<step_id>/accounting.json`
+- `run-artifact://node/<node_id>/step/<step_id>/subcall-<subcall_index>-accounting.json`
 
 Event envelope ownership remains in `PRD-0210`; this PRD owns the accounting
 schema and accounting exposure semantics on those runtime surfaces.

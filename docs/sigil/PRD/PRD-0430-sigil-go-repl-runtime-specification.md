@@ -28,7 +28,7 @@ defined in `PRD-0420`.
 - Define node-local Go REPL runtime behavior for `continuation.repl_code`.
 - Define REPL session lifecycle and persistence rules.
 - Define fixed execution limits and import policy.
-- Define artifact persistence and `output_ref` behavior.
+- Define artifact persistence and `action_ref` behavior.
 - Define compile-diagnostics persistence and typed runtime failures.
 
 ## Non-Goals
@@ -79,13 +79,13 @@ defined in `PRD-0420`.
 ## Artifact and Reference Contract
 
 - Every action execution MUST persist one artifact JSON document under run-local storage.
-- `node.action.executed.output_ref` MUST be present for both successful and failed action executions.
-- `output_ref` MUST resolve to the persisted action artifact for the same `run_id`, `node_id`, `step_id`, and `action_index`.
+- `node.action.executed.action_ref` MUST be present for both successful and failed action executions.
+- `action_ref` MUST resolve to the persisted action artifact for the same `run_id`, `node_id`, `step_id`, and `action_index`.
 - Canonical reference format is:
   - `run-artifact://node/<node_id>/step/<step_id>/action-<action_index>.json`
 - Canonical storage path mapped from this reference is:
   - `./.sigil/runs/<run_id>/artifacts/node/<node_id>/step/<step_id>/action-<action_index>.json`
-- REPL runtime MUST expose read-only exact artifact recovery through `read_action_output(output_ref)` for canonical current-run references only.
+- REPL runtime MUST expose read-only exact artifact recovery through `read_action_artifact(action_ref)` for canonical current-run references only.
 - Artifact payload MUST include:
   - run, node, step, and action identity
   - `action_type`
@@ -198,11 +198,11 @@ Given `continuation.repl_code` imports blocked packages
 When runtime validates imports  
 Then execution fails with typed import-policy behavior.
 
-### Scenario SCN-0010: Persists per-action artifact and sets node.action.executed.output_ref
+### Scenario SCN-0010: Persists per-action artifact and sets node.action.executed.action_ref
 
 Given an action execution completes or fails  
 When runtime persists the action artifact  
-Then `node.action.executed.output_ref` points to that artifact.
+Then `node.action.executed.action_ref` points to that artifact.
 
 ### Scenario SCN-0011: Fails run on fatal REPL infrastructure errors with typed error metadata
 
@@ -222,8 +222,8 @@ Given structured compile diagnostics are available
 When runtime exposes diagnostic information  
 Then `node.action.executed` payload shape remains unchanged and diagnostics appear only in the artifact and downstream feedback surfaces.
 
-### Scenario SCN-0014: Returns exact action output fields from canonical current-run output_ref via read_action_output
+### Scenario SCN-0014: Returns exact action output fields from canonical current-run action_ref via read_action_artifact
 
 Given a canonical current-run action artifact reference  
-When `read_action_output` resolves that `output_ref` in REPL runtime  
+When `read_action_artifact` resolves that `action_ref` in REPL runtime  
 Then exact action status stdout stderr and typed error fields are returned.

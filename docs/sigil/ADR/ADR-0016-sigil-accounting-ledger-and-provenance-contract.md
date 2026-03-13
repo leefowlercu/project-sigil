@@ -36,7 +36,8 @@ following contract:
   - `missing_token_item_count`
   - `missing_cost_item_count`
 - Accounting is emitted both inline on canonical runtime events and via
-  canonical accounting artifacts for subcall, step, node, and run scopes.
+  canonical accounting artifacts for subcall, step, node, and run scopes within
+  the unified artifact namespace.
 - Aggregate scopes use a fixed rollup model:
   - `model_total`
   - `direct_subcalls_total`

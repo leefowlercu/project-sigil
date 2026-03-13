@@ -66,7 +66,7 @@ This PRD owns:
 
 `context_ref` rules:
 
-- `context_ref` MUST be a canonical run-output reference.
+- `context_ref` MUST be a canonical artifact reference.
 - `context_ref` MUST be non-empty and resolvable in run-local storage.
 - The referenced artifact is the canonical persisted form of node-local context for evidence and prompt-boundary workflows.
 
@@ -97,7 +97,7 @@ This PRD owns:
 
 - First step MUST omit `previous_action_feedback`.
 - For subsequent steps after continue actions, feedback MUST include:
-  - `output_ref`
+  - `action_ref`
   - `status`
   - optional `error_code`
   - optional `error_message`
@@ -123,11 +123,11 @@ This PRD owns:
   - total subcalls
   - plain-mode subcalls
   - recursive-mode subcalls
-  - fallback-mode subcalls
-  - completed subcalls
-  - failed subcalls
+- fallback-mode subcalls
+- completed subcalls
+- failed subcalls
 - Action artifacts remain the source of truth for full stdout and stderr.
-- Exact action output recovery, when needed, MUST occur through REPL-side `read_action_output(output_ref)` rather than widening `previous_action_feedback`.
+- Exact action artifact recovery, when needed, MUST occur through REPL-side `read_action_artifact(action_ref)` rather than widening `previous_action_feedback`.
 
 ## User-Turn Artifact Contract
 
@@ -170,11 +170,11 @@ Given an active node step with resolved query and context
 When the user step envelope is encoded  
 Then the envelope contains deterministic `query`, `step_index`, and `context_metadata` fields.
 
-### Scenario SCN-0003: Includes bounded previous-action feedback summary with output_ref and preview truncation metadata
+### Scenario SCN-0003: Includes bounded previous-action feedback summary with action_ref and preview truncation metadata
 
 Given a node step after a continue action has executed  
 When the user step envelope is encoded  
-Then `previous_action_feedback` includes `output_ref` and bounded preview truncation metadata.
+Then `previous_action_feedback` includes `action_ref` and bounded preview truncation metadata.
 
 ### Scenario SCN-0004: Omits previous-action feedback block on first step before any continue action executes
 
@@ -249,8 +249,8 @@ Given a prior continue action executed one or more subcalls
 When subsequent step input is constructed  
 Then `previous_action_feedback.subcall_summary` includes deterministic counts by execution mode and status.
 
-### Scenario SCN-0016: Preserves bounded previous_action_feedback previews while exact action output remains recoverable through read_action_output
+### Scenario SCN-0016: Preserves bounded previous_action_feedback previews while exact action output remains recoverable through read_action_artifact
 
 Given a node step after a continue action has executed  
 When bounded feedback is exposed to the model and REPL  
-Then previews remain bounded and exact action output remains recoverable through `read_action_output(output_ref)`.
+Then previews remain bounded and exact action output remains recoverable through `read_action_artifact(action_ref)`.

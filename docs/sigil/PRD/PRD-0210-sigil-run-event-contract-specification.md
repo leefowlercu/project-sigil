@@ -126,9 +126,9 @@ Additional invariants:
 | --- | --- | --- | --- |
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
-| `output_ref` | No | string | Non-empty when present; SHOULD reference persisted normalized inference output with `schema_id=sigil.rlm.response.v1` |
+| `result_ref` | No | string | Non-empty when present; SHOULD reference persisted terminal node-result artifact when one exists |
 | `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical node accounting artifact defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical accounting artifact defined in `PRD-0510` |
 
 ### `node.failed` payload schema
 
@@ -170,7 +170,7 @@ Additional invariants:
 | --- | --- | --- | --- |
 | `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
 | `role` | Yes | string literal | Must be `user` |
-| `content_ref` | Yes | string | Non-empty |
+| `content_ref` | Yes | string | Non-empty canonical artifact reference |
 
 Additional invariants:
 
@@ -185,7 +185,7 @@ Additional invariants:
 | --- | --- | --- | --- |
 | `step_id` | Yes | UUIDv7 | Non-empty UUIDv7 |
 | `role` | Yes | string literal | Must be `model` |
-| `content_ref` | Yes | string | Non-empty |
+| `content_ref` | Yes | string | Non-empty canonical artifact reference |
 
 ### `node.action.executed` payload schema
 
@@ -197,15 +197,15 @@ Additional invariants:
 | `language` | Yes | string literal | Must be `go` |
 | `status` | Yes | string enum | One of: `completed`, `failed` |
 | `duration_ms` | Yes | integer | `>= 0` |
-| `output_ref` | Yes | string | Non-empty canonical artifact reference |
+| `action_ref` | Yes | string | Non-empty canonical artifact reference |
 | `error_code` | No | string | Required when `status=failed`; forbidden when `status=completed` |
 | `error_message` | No | string | Required when `status=failed`; forbidden when `status=completed` |
 
 Additional invariants:
 
-- `output_ref` MUST resolve to persisted action artifact for the same run,
+- `action_ref` MUST resolve to persisted action artifact for the same run,
   node, step, and action index.
-- Canonical `output_ref` artifact reference format is defined in `PRD-0430`.
+- Canonical `action_ref` artifact reference format is defined in `PRD-0430`.
 
 ### `node.subcall.executed` payload schema
 
@@ -235,9 +235,9 @@ Additional invariants:
 | --- | --- | --- | --- |
 | `status` | Yes | string literal | Must be `completed` |
 | `duration_ms` | Yes | integer | `>= 0` |
-| `final_answer_ref` | No | string | Non-empty when present; SHOULD reference terminal normalized inference output with `schema_id=sigil.rlm.response.v1` and `validated_payload.decision=final` |
+| `final_answer_ref` | No | string | Non-empty when present; SHOULD reference canonical final-answer artifact for the completed run |
 | `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical accounting artifact defined in `PRD-0510` |
 
 ### `run.failed` payload schema
 
@@ -253,7 +253,7 @@ Additional invariants:
 | `configured_value` | No | string | Non-empty when present; required when `limit_key` is present |
 | `observed_value` | No | string | Non-empty when present; required when `limit_key` is present |
 | `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical accounting artifact defined in `PRD-0510` |
 
 Additional invariants:
 
@@ -271,7 +271,7 @@ Additional invariants:
 | `interrupted_by` | No | string | Non-empty when present |
 | `interrupted_node_id` | No | UUIDv7 | Optional |
 | `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
-| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical run accounting artifact defined in `PRD-0510` |
+| `accounting_ref` | No | string | Non-empty when present; SHOULD reference canonical accounting artifact defined in `PRD-0510` |
 
 Additional invariants:
 
@@ -463,7 +463,7 @@ Then required fields are enforced and role values must match event type semantic
 
 Given persisted node action execution events  
 When action payloads are validated  
-Then `node.action.executed` enforces action type language status output_ref
+Then `node.action.executed` enforces action type language status action_ref
 artifact reference and v1 single-action invariants.
 
 ### Scenario SCN-0019: Defines node.subcall.executed event type for subcall observability

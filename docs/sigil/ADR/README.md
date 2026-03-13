@@ -41,9 +41,11 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define accounting ledger, provenance, and rollup contracts for sigil runs
 - [`ADR-0017-sigil-local-run-stop-pid-signal-control.md`](ADR-0017-sigil-local-run-stop-pid-signal-control.md):
   Define local PID-and-signal graceful-stop control for sigil CLI runs
+- [`ADR-0018-sigil-durable-run-artifact-taxonomy-and-reference-unification.md`](ADR-0018-sigil-durable-run-artifact-taxonomy-and-reference-unification.md):
+  Define events-plus-artifacts durable taxonomy and unified artifact refs for sigil runs
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0018-<slug>.md`
+- `docs/sigil/ADR/ADR-0019-<slug>.md`
