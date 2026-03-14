@@ -6,66 +6,60 @@ Accepted
 
 ## Context
 
-`sigil` requires a deterministic baseline logging behavior contract for:
-
-- Structured, machine-readable application logs.
-- Stable file-target behavior for operational debugging.
-- Predictable startup failure behavior when logging sink initialization fails.
-
-This PRD defines behavior-level logging output and file target contracts.
+`sigil` requires deterministic application logging for operational debugging and
+startup verification. Logging is now configured through the grouped
+application-config contract owned by `PRD-0100`.
 
 ## Goals
 
 - Define baseline application log output format.
-- Define how effective log file paths are derived.
-- Define startup/initialization behavior when file sink setup fails.
-- Keep contracts aligned with `PRD-0100` application config (`log_dir`,
-  `log_level`).
+- Define how effective log file paths are derived from `logs.dir`.
+- Define startup behavior when logging sink initialization fails.
 
 ## Non-Goals
 
 - Defining log rotation or retention behavior.
-- Defining multi-sink logging behavior (for example file + stderr).
-- Defining strict, pinned JSON field schema beyond baseline structured JSON.
+- Defining multi-sink logging behavior.
+- Defining app-server notification or runtime-event logging semantics.
 
 ## Logging Output Contract
 
-- Application logs MUST be persisted to file only in this baseline.
-- Application logs MUST be structured JSON records.
-- Structured JSON records are based on baseline `slog` JSON handler behavior.
+- Application logs MUST be persisted to file only in the baseline contract.
+- Application logs MUST use structured JSON records.
+- Structured JSON records MUST be based on baseline `slog` JSON handler
+  behavior.
 
 ## Log File Path Derivation Contract
 
 - The log file name MUST be `sigil.log`.
 - The effective application log file path MUST be derived as
-  `<log_dir>/sigil.log`.
-- If `log_dir` is relative, path resolution MUST follow `PRD-0100` rules
-  (relative to current working directory).
-- With default `PRD-0100` application config values, the default log file path
-  MUST be `./.sigil/logs/sigil.log`.
+  `<logs.dir>/sigil.log`.
+- If `logs.dir` is relative, path resolution MUST follow `PRD-0100` rules.
+- With default `PRD-0100` values, the default log file path MUST be
+  `./.sigil/logs/sigil.log`.
 
 ## Initialization Failure Contract
 
-- If the derived log file path cannot be opened/created as a file sink,
-  application startup/initialization MUST fail with non-zero exit.
-- Missing, unusable, or non-file sink targets MUST be treated as initialization
-  failure for the logging subsystem.
+- If the derived log file path cannot be opened or created as a file sink,
+  application startup MUST fail with non-zero exit.
+- Missing, unusable, or non-file sink targets MUST be treated as logging
+  initialization failure.
 
 ## Deferred Contracts
 
 The following are explicitly deferred to future PRDs:
 
 - Log rotation policy and retention windows.
-- Mandatory key schema pinning for JSON records.
-- Optional additional sinks (for example mirrored stderr).
+- Additional sinks such as mirrored stderr.
+- Pinned JSON field-schema guarantees beyond baseline structured output.
 
 ## Acceptance Scenarios
 
 ### Scenario SCN-0000: Writes application logs to a derived sigil.log file path
 
-Given an effective `log_dir` value  
+Given an effective `logs.dir` value  
 When application logging is initialized  
-Then the effective log file path is `<log_dir>/sigil.log`.
+Then the effective log file path is `<logs.dir>/sigil.log`.
 
 ### Scenario SCN-0001: Uses JSON structured log records for application logging
 
@@ -73,7 +67,7 @@ Given application logging emits records
 When log entries are written  
 Then records are emitted in structured JSON format.
 
-### Scenario SCN-0002: Uses default log file path when default log_dir is in effect
+### Scenario SCN-0002: Uses default log file path when default logs.dir is in effect
 
 Given default `PRD-0100` application configuration values  
 When logging is initialized  
@@ -81,12 +75,12 @@ Then the effective log target path is `./.sigil/logs/sigil.log`.
 
 ### Scenario SCN-0003: Fails initialization when derived log file path cannot be opened as a file sink
 
-Given a derived log file path that cannot be opened/created as a file sink  
+Given a derived log file path that cannot be opened or created as a file sink  
 When logging initialization runs  
-Then startup/initialization fails with non-zero exit.
+Then startup fails with non-zero exit.
 
-### Scenario SCN-0004: Derives log file path from configured log_dir override
+### Scenario SCN-0004: Derives log file path from configured logs.dir override
 
-Given an overridden `log_dir` value  
+Given an overridden `logs.dir` value  
 When logging is initialized  
-Then the effective log target path is `<overridden-log_dir>/sigil.log`.
+Then the effective log target path is `<overridden-logs.dir>/sigil.log`.

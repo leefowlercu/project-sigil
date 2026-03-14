@@ -11,14 +11,15 @@ integrations can discover execution, control, and inspection entrypoints
 without inferring command structure from implementation details.
 
 This PRD defines the external CLI command tree, inherited flags, and delegated
-behavior ownership for the root and run parent command surfaces.
+behavior ownership for the root, run, and app-server parent command surfaces.
 
 ## Goals
 
 - Define the `sigil` executable command tree.
 - Define inherited CLI flags available across the command tree.
 - Define observable behavior for root and parent command entrypoints.
-- Define delegation boundaries for run start, stop, and inspection commands.
+- Define delegation boundaries for run start, stop, inspection, and app-server
+  commands.
 - Define error handling expectations for unknown or invalid subcommands.
 
 ## Non-Goals
@@ -34,19 +35,26 @@ The CLI surface MUST be:
 
 ```text
 sigil
-└── run [--run-dir <path>]
-    ├── start
-    ├── stop
-    ├── list
-    ├── status <run-id>
-    ├── inspect <run-id>
-    └── events <run-id>
+├── run [--run-dir <path>]
+│   ├── start
+│   ├── stop
+│   ├── list
+│   ├── status <run-id>
+│   ├── inspect <run-id>
+│   └── events <run-id>
+└── app-server
+    ├── serve
+    ├── generate-ts
+    └── generate-json-schema
 ```
 
 - Executable name MUST be `sigil`.
 - `run` MUST be a subcommand of the root command.
+- `app-server` MUST be a subcommand of the root command.
 - `start`, `stop`, `list`, `status`, `inspect`, and `events` MUST be
   subcommands of `run`.
+- `serve`, `generate-ts`, and `generate-json-schema` MUST be subcommands of
+  `app-server`.
 
 ## Inherited Flag Contract
 
@@ -78,6 +86,9 @@ sigil
   `sigil run events` behavior is delegated to
   `PRD-0160-sigil-run-inspection-command-specification.md` and
   `PRD-0220-sigil-run-projection-and-query-specification.md`.
+- `sigil app-server serve`, `sigil app-server generate-ts`, and
+  `sigil app-server generate-json-schema` behavior is delegated to
+  `PRD-0170-sigil-app-server-transport-and-handshake-specification.md`.
 - No positional arguments or required flags are defined for `sigil` or
   `sigil run` in this PRD.
 
@@ -92,6 +103,9 @@ sigil
 - `sigil run list`, `sigil run status`, `sigil run inspect`, and
   `sigil run events` exit behavior is defined by
   `PRD-0160-sigil-run-inspection-command-specification.md`.
+- `sigil app-server serve`, `sigil app-server generate-ts`, and
+  `sigil app-server generate-json-schema` exit behavior is defined by
+  `PRD-0170-sigil-app-server-transport-and-handshake-specification.md`.
 
 ## Error Handling Contract
 
@@ -106,7 +120,8 @@ The following are explicitly deferred to future PRDs:
 
 - Lifecycle, event, and interruption internals owned by runtime lifecycle and
   event PRDs.
-- Remote or app-server command surfaces.
+- Remote transports or method families beyond the initial `app-server`
+  subcommands.
 
 ## Acceptance Scenarios
 

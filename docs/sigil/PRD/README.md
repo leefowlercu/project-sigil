@@ -54,6 +54,12 @@ This directory stores product requirement documents for the `sigil` subproject.
   Sigil run-stop command input contract
 - [`PRD-0160-sigil-run-inspection-command-specification.md`](PRD-0160-sigil-run-inspection-command-specification.md):
   Sigil run inspection and events command contract
+- [`PRD-0170-sigil-app-server-transport-and-handshake-specification.md`](PRD-0170-sigil-app-server-transport-and-handshake-specification.md):
+  Sigil app-server transport, handshake, and protocol generation contract
+- [`PRD-0180-sigil-app-server-read-query-surface-specification.md`](PRD-0180-sigil-app-server-read-query-surface-specification.md):
+  Sigil app-server shared read-plane and query contract
+- [`PRD-0190-sigil-app-server-execution-subscriptions-and-control-specification.md`](PRD-0190-sigil-app-server-execution-subscriptions-and-control-specification.md):
+  Sigil app-server execution, subscription, and remote control contract
 
 ### Runtime Core
 
@@ -122,6 +128,6 @@ number in that block.
 
 Examples:
 
-- `docs/sigil/PRD/PRD-0170-<slug>-specification.md` for a new CLI/config contract
+- `docs/sigil/PRD/PRD-0175-<slug>-specification.md` for a new CLI/config contract
 - `docs/sigil/PRD/PRD-0330-<slug>-specification.md` for a new inference contract
 - `docs/sigil/PRD/PRD-0460-<slug>-specification.md` for a new harness/REPL contract

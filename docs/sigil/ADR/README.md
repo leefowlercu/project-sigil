@@ -43,9 +43,11 @@ This directory stores architecture decision records for the `sigil` subproject.
   Define local PID-and-signal graceful-stop control for sigil CLI runs
 - [`ADR-0018-sigil-durable-run-artifact-taxonomy-and-reference-unification.md`](ADR-0018-sigil-durable-run-artifact-taxonomy-and-reference-unification.md):
   Define events-plus-artifacts durable taxonomy and unified artifact refs for sigil runs
+- [`ADR-0019-sigil-app-server-transport-and-session-architecture.md`](ADR-0019-sigil-app-server-transport-and-session-architecture.md):
+  Define app-server transport, handshake, and shared-read-plane architecture
 
 ## Next ADR
 
 Create the next record as:
 
-- `docs/sigil/ADR/ADR-0019-<slug>.md`
+- `docs/sigil/ADR/ADR-0020-<slug>.md`

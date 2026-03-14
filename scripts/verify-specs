@@ -22,6 +22,12 @@ class Scenario:
     title: str
 
 
+@dataclass(frozen=True)
+class MatrixScenario:
+    scenario: Scenario
+    feature_file: str
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
@@ -77,9 +83,9 @@ def parse_prds(prd_dir: Path) -> tuple[list[Scenario], list[str]]:
     return scenarios, errors
 
 
-def parse_matrix(matrix_path: Path, feature_file: str) -> tuple[list[Scenario], list[str]]:
+def parse_matrix(matrix_path: Path) -> tuple[list[MatrixScenario], list[str]]:
     errors: list[str] = []
-    scenarios: list[Scenario] = []
+    scenarios: list[MatrixScenario] = []
 
     for line_no, line in enumerate(matrix_path.read_text().splitlines(), start=1):
         if not line.startswith("| `PRD-"):
@@ -94,19 +100,20 @@ def parse_matrix(matrix_path: Path, feature_file: str) -> tuple[list[Scenario], 
         prd = prd.strip("`")
         scenario_id = scenario_id.strip("`")
         prd_title = prd_title.strip("`")
+        mapped_feature = mapped_feature.strip("`")
         feature_title = feature_title.strip("`")
-
-        if mapped_feature.strip("`") != feature_file:
-            errors.append(
-                f"{matrix_path}:{line_no} expected feature file {feature_file} but found {mapped_feature}",
-            )
 
         if prd_title != feature_title:
             errors.append(
                 f"{matrix_path}:{line_no} PRD title does not match mapped feature title: {prd_title!r} != {feature_title!r}",
             )
 
-        scenarios.append(Scenario(prd=prd, scenario_id=scenario_id, title=prd_title))
+        scenarios.append(
+            MatrixScenario(
+                scenario=Scenario(prd=prd, scenario_id=scenario_id, title=prd_title),
+                feature_file=mapped_feature,
+            ),
+        )
 
     return scenarios, errors
 
@@ -138,17 +145,24 @@ def main() -> int:
 
     prd_dir = root / "docs" / "sigil" / "PRD"
     matrix_path = prd_dir / "MATRIX.md"
-    feature_path = root / "sigil" / "acceptance" / "features" / "harness.feature"
-    feature_file = "sigil/acceptance/features/harness.feature"
-
     prd_scenarios, prd_errors = parse_prds(prd_dir)
-    matrix_scenarios, matrix_errors = parse_matrix(matrix_path, feature_file)
-    feature_titles, feature_errors = parse_feature(feature_path)
+    matrix_scenarios, matrix_errors = parse_matrix(matrix_path)
+
+    feature_titles_by_file: dict[str, set[str]] = {}
+    feature_errors: list[str] = []
+    for feature_file in sorted({scenario.feature_file for scenario in matrix_scenarios}):
+        feature_path = root / feature_file
+        if not feature_path.exists():
+            feature_errors.append(f"missing feature file: {feature_file}")
+            continue
+        feature_titles, file_errors = parse_feature(feature_path)
+        feature_titles_by_file[feature_file] = feature_titles
+        feature_errors.extend(file_errors)
 
     errors = [*prd_errors, *matrix_errors, *feature_errors]
 
     prd_set = set(prd_scenarios)
-    matrix_set = set(matrix_scenarios)
+    matrix_set = {item.scenario for item in matrix_scenarios}
 
     missing_from_matrix = sorted(prd_set - matrix_set, key=lambda item: (item.prd, item.scenario_id))
     missing_from_prd = sorted(matrix_set - prd_set, key=lambda item: (item.prd, item.scenario_id))
@@ -162,10 +176,15 @@ def main() -> int:
             f"missing from PRDs: {scenario.prd} {scenario.scenario_id} {scenario.title}",
         )
 
-    for scenario in sorted(prd_scenarios, key=lambda item: (item.prd, item.scenario_id)):
-        if scenario.title not in feature_titles:
+    for matrix_scenario in matrix_scenarios:
+        feature_titles = feature_titles_by_file.get(matrix_scenario.feature_file, set())
+        if matrix_scenario.scenario.title not in feature_titles:
             errors.append(
-                f"missing from feature: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+                "missing from feature:"
+                + f" {matrix_scenario.scenario.prd}"
+                + f" {matrix_scenario.scenario.scenario_id}"
+                + f" {matrix_scenario.scenario.title}"
+                + f" ({matrix_scenario.feature_file})",
             )
 
     if errors:
@@ -177,7 +196,7 @@ def main() -> int:
         "verified sigil specs:",
         f"prds={len({scenario.prd for scenario in prd_scenarios})}",
         f"scenarios={len(prd_scenarios)}",
-        f"feature_titles={len(feature_titles)}",
+        f"feature_titles={sum(len(titles) for titles in feature_titles_by_file.values())}",
     )
     return 0
 
