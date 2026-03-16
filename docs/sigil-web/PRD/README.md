@@ -3,17 +3,79 @@
 This directory stores product requirement documents for the `sigil-web` subproject.
 
 - PRDs define expected external behavior and acceptance criteria.
+- Organize PRDs by stable operator workflow or concern boundary, not by delivery
+  chronology.
+- Prefer one normative owner for a behavior; other PRDs should reference that
+  owner instead of restating the contract.
 - Update PRD acceptance scenarios before or alongside submodule implementation changes.
 - Use scenario IDs in the form `SCN-xxxx` for PRD acceptance scenarios.
 - Use PRD filenames in the form `PRD-<4-digit>-<slug>-specification.md`.
 - Keep PRD scenario IDs and titles aligned with `docs/sigil-web/PRD/MATRIX.md` mappings.
+- Keep routed UI scenarios aligned with
+  [`sigil-web/design/design-manifest.toml`](../../../sigil-web/design/design-manifest.toml).
 
-## Status
+## Management Model
 
-No PRDs have been recorded yet for this repository.
+- Keep PRDs behavior-centric and acceptance-backed.
+- Keep each PRD focused on one durable concern boundary:
+  - session and transport state
+  - operator shell and navigation
+  - run inspection workspace
+  - live orchestration and recovery
+  - remote control and authoring
+- Prefer adding a new PRD over stretching an existing record across multiple
+  workflow boundaries.
+
+## Lifecycle and Verification
+
+- Keep PRD acceptance scenario titles globally unique within `sigil-web`.
+- Keep routed UI state names stable across PRDs, the acceptance feature file,
+  and the design manifest so route-state traceability stays mechanical.
+- Run `./scripts/verify-specs --subproject sigil-web` after structural PRD,
+  matrix, feature-title, or design-manifest edits.
+
+## Numbering Blocks
+
+- `PRD-0100` to `PRD-0199`: session, transport, and compatibility
+- `PRD-0200` to `PRD-0299`: operator shell and run-list workflows
+- `PRD-0300` to `PRD-0399`: run inspection and detail workspace behavior
+- `PRD-0400` to `PRD-0499`: live orchestration and connection recovery
+- `PRD-0500` to `PRD-0599`: remote control and run authoring
+
+## Current PRDs
+
+### Session, Transport, and Compatibility
+
+- [PRD-0100 Sigil-Web Session and Connection State Specification](PRD-0100-sigil-web-session-and-connection-state-specification.md):
+  WebSocket handshake, compatibility, and connection-state UX contract
+
+### Operator Shell and Run List
+
+- [PRD-0200 Sigil-Web Operator Shell and Run List Specification](PRD-0200-sigil-web-operator-shell-and-run-list-specification.md):
+  Operator shell, run list, pagination, and empty-state contract
+
+### Run Inspection and Detail Workspace
+
+- [PRD-0300 Sigil-Web Run Detail Workspace Specification](PRD-0300-sigil-web-run-detail-workspace-specification.md):
+  Summary, tree, timeline, step, and artifact inspection contract
+
+### Live Orchestration and Connection Recovery
+
+- [PRD-0400 Sigil-Web Live Orchestration and Connection Recovery Specification](PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md):
+  Live subscription, reconnect, and terminal transition contract
+
+### Remote Control and Run Authoring
+
+- [PRD-0500 Sigil-Web Run Control and Authoring Specification](PRD-0500-sigil-web-run-control-and-authoring-specification.md):
+  Inline YAML start and run-stop control contract
 
 ## Next PRD
 
-Create the first record as:
+Create the next record within the correct subsystem block using the first open
+number in that block.
 
-- `docs/sigil-web/PRD/PRD-0001-<slug>-specification.md`
+Examples:
+
+- `docs/sigil-web/PRD/PRD-0150-<slug>-specification.md` for new session or compatibility behavior
+- `docs/sigil-web/PRD/PRD-0350-<slug>-specification.md` for new run-detail workspace behavior
+- `docs/sigil-web/PRD/PRD-0550-<slug>-specification.md` for new remote-control behavior

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import tomllib
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +29,21 @@ class MatrixScenario:
     feature_file: str
 
 
+@dataclass(frozen=True)
+class SubprojectConfig:
+    prd_dir: str
+    design_manifest: str | None = None
+
+
+SUBPROJECTS = {
+    "sigil": SubprojectConfig(prd_dir="docs/sigil/PRD"),
+    "sigil-web": SubprojectConfig(
+        prd_dir="docs/sigil-web/PRD",
+        design_manifest="sigil-web/design/design-manifest.toml",
+    ),
+}
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
@@ -39,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--subproject",
         default="sigil",
-        choices=("sigil",),
+        choices=tuple(sorted(SUBPROJECTS)),
         help="Subproject to verify.",
     )
     return parser.parse_args()
@@ -95,6 +111,9 @@ def parse_matrix(matrix_path: Path) -> tuple[list[MatrixScenario], list[str]]:
         if len(columns) != 6:
             errors.append(f"{matrix_path}:{line_no} expected 6 columns but found {len(columns)}")
             continue
+        if any("TBD" in column.upper() for column in columns[:5]):
+            errors.append(f"{matrix_path}:{line_no} contains unresolved placeholder content")
+            continue
 
         prd, scenario_id, prd_title, mapped_feature, feature_title, _note = columns
         prd = prd.strip("`")
@@ -114,6 +133,106 @@ def parse_matrix(matrix_path: Path) -> tuple[list[MatrixScenario], list[str]]:
                 feature_file=mapped_feature,
             ),
         )
+
+    return scenarios, errors
+
+
+def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str]]:
+    errors: list[str] = []
+    scenarios: list[Scenario] = []
+
+    if not manifest_path.exists():
+        return [], [f"missing design manifest: {manifest_path}"]
+
+    try:
+        with manifest_path.open("rb") as handle:
+            data = tomllib.load(handle)
+    except tomllib.TOMLDecodeError as err:
+        return [], [f"{manifest_path}: invalid TOML ({err})"]
+
+    route_ids: set[str] = set()
+    for index, route in enumerate(data.get("route", []), start=1):
+        route_id = route.get("id")
+        location = f"{manifest_path}:route[{index}]"
+        if not isinstance(route_id, str) or not route_id.strip():
+            errors.append(f"{location} missing route id")
+            continue
+        if route_id in route_ids:
+            errors.append(f"{location} duplicate route id: {route_id}")
+            continue
+        route_ids.add(route_id)
+
+    viewport_ids: set[str] = set()
+    for index, viewport in enumerate(data.get("viewport", []), start=1):
+        viewport_id = viewport.get("id")
+        location = f"{manifest_path}:viewport[{index}]"
+        if not isinstance(viewport_id, str) or not viewport_id.strip():
+            errors.append(f"{location} missing viewport id")
+            continue
+        if viewport_id in viewport_ids:
+            errors.append(f"{location} duplicate viewport id: {viewport_id}")
+            continue
+        viewport_ids.add(viewport_id)
+
+    required_viewports = data.get("required_viewports", [])
+    if not isinstance(required_viewports, list) or not required_viewports:
+        errors.append(f"{manifest_path} missing required_viewports")
+    else:
+        for viewport_id in required_viewports:
+            if viewport_id not in viewport_ids:
+                errors.append(
+                    f"{manifest_path} required viewport not declared: {viewport_id}",
+                )
+
+    manifest_scenarios = data.get("scenario", [])
+    if not manifest_scenarios:
+        errors.append(f"{manifest_path} missing scenario entries")
+
+    for index, item in enumerate(manifest_scenarios, start=1):
+        location = f"{manifest_path}:scenario[{index}]"
+        prd = item.get("prd")
+        scenario_id = item.get("scenario_id")
+        title = item.get("title")
+        route_id = item.get("route_id")
+        required_test_ids = item.get("required_test_ids")
+        paper_artboards = item.get("paper_artboards")
+
+        if not isinstance(prd, str) or not prd.strip():
+            errors.append(f"{location} missing prd")
+            continue
+        if not isinstance(scenario_id, str) or not scenario_id.strip():
+            errors.append(f"{location} missing scenario_id")
+            continue
+        if not isinstance(title, str) or not title.strip():
+            errors.append(f"{location} missing title")
+            continue
+        if not isinstance(route_id, str) or not route_id.strip():
+            errors.append(f"{location} missing route_id")
+            continue
+        if route_id not in route_ids:
+            errors.append(f"{location} unknown route_id: {route_id}")
+
+        if not isinstance(required_test_ids, list) or not required_test_ids:
+            errors.append(f"{location} missing required_test_ids")
+        elif any(not isinstance(item, str) or not item.strip() for item in required_test_ids):
+            errors.append(f"{location} contains blank required_test_ids entries")
+
+        if not isinstance(paper_artboards, dict):
+            errors.append(f"{location} missing paper_artboards table")
+        else:
+            for viewport_id in required_viewports:
+                artboard = paper_artboards.get(viewport_id)
+                if not isinstance(artboard, str) or not artboard.strip():
+                    errors.append(
+                        f"{location} missing paper_artboards entry for {viewport_id}",
+                    )
+
+        scenarios.append(Scenario(prd=prd, scenario_id=scenario_id, title=title))
+
+    title_counts = Counter(item.title for item in scenarios)
+    for title, count in sorted(title_counts.items()):
+        if count > 1:
+            errors.append(f"duplicate design manifest scenario title ({count}): {title}")
 
     return scenarios, errors
 
@@ -138,12 +257,8 @@ def parse_feature(feature_path: Path) -> tuple[set[str], list[str]]:
 def main() -> int:
     args = parse_args()
     root = repo_root()
-
-    if args.subproject != "sigil":
-        print(f"unsupported subproject: {args.subproject}", file=sys.stderr)
-        return 2
-
-    prd_dir = root / "docs" / "sigil" / "PRD"
+    config = SUBPROJECTS[args.subproject]
+    prd_dir = root / config.prd_dir
     matrix_path = prd_dir / "MATRIX.md"
     prd_scenarios, prd_errors = parse_prds(prd_dir)
     matrix_scenarios, matrix_errors = parse_matrix(matrix_path)
@@ -159,7 +274,12 @@ def main() -> int:
         feature_titles_by_file[feature_file] = feature_titles
         feature_errors.extend(file_errors)
 
-    errors = [*prd_errors, *matrix_errors, *feature_errors]
+    design_scenarios: list[Scenario] = []
+    design_errors: list[str] = []
+    if config.design_manifest is not None:
+        design_scenarios, design_errors = parse_design_manifest(root / config.design_manifest)
+
+    errors = [*prd_errors, *matrix_errors, *feature_errors, *design_errors]
 
     prd_set = set(prd_scenarios)
     matrix_set = {item.scenario for item in matrix_scenarios}
@@ -187,17 +307,34 @@ def main() -> int:
                 + f" ({matrix_scenario.feature_file})",
             )
 
+    if config.design_manifest is not None:
+        design_set = set(design_scenarios)
+        missing_from_design = sorted(matrix_set - design_set, key=lambda item: (item.prd, item.scenario_id))
+        missing_from_matrix = sorted(design_set - matrix_set, key=lambda item: (item.prd, item.scenario_id))
+
+        for scenario in missing_from_design:
+            errors.append(
+                f"missing from design manifest: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+            )
+        for scenario in missing_from_matrix:
+            errors.append(
+                f"missing from MATRIX or PRDs for design manifest: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+            )
+
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
 
-    print(
-        "verified sigil specs:",
+    summary = [
+        f"verified {args.subproject} specs:",
         f"prds={len({scenario.prd for scenario in prd_scenarios})}",
         f"scenarios={len(prd_scenarios)}",
         f"feature_titles={sum(len(titles) for titles in feature_titles_by_file.values())}",
-    )
+    ]
+    if config.design_manifest is not None:
+        summary.append(f"design_scenarios={len(design_scenarios)}")
+    print(*summary)
     return 0
 
 
