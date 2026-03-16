@@ -86,8 +86,8 @@ Sigil-web adopts these design-governance rules:
 
 - [Sigil-Web ADR Index](README.md)
 - [PRD-0100 Session and Connection State](../PRD/PRD-0100-sigil-web-session-and-connection-state-specification.md)
-- [PRD-0200 Operator Shell and Run List](../PRD/PRD-0200-sigil-web-operator-shell-and-run-list-specification.md)
+- [PRD-0200 Agent Fleet Hub and Selection](../PRD/PRD-0200-sigil-web-agent-fleet-hub-and-selection-specification.md)
 - [PRD-0300 Run Detail Workspace](../PRD/PRD-0300-sigil-web-run-detail-workspace-specification.md)
 - [PRD-0400 Live Orchestration and Connection Recovery](../PRD/PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md)
-- [PRD-0500 Run Control and Authoring](../PRD/PRD-0500-sigil-web-run-control-and-authoring-specification.md)
+- [PRD-0500 Agent Run Control and Authoring](../PRD/PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md)
 - [`sigil-web/design/design-manifest.toml`](../../../sigil-web/design/design-manifest.toml)

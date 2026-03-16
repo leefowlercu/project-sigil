@@ -76,4 +76,4 @@ Sigil-web adopts these contract and testing rules:
 - [ADR-0002 TanStack Start Route and State Architecture](ADR-0002-sigil-web-tanstack-start-route-and-state-architecture.md)
 - [PRD-0100 Session and Connection State](../PRD/PRD-0100-sigil-web-session-and-connection-state-specification.md)
 - [PRD-0400 Live Orchestration and Connection Recovery](../PRD/PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md)
-- [PRD-0500 Run Control and Authoring](../PRD/PRD-0500-sigil-web-run-control-and-authoring-specification.md)
+- [PRD-0500 Agent Run Control and Authoring](../PRD/PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md)

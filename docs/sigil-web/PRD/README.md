@@ -19,10 +19,10 @@ This directory stores product requirement documents for the `sigil-web` subproje
 - Keep PRDs behavior-centric and acceptance-backed.
 - Keep each PRD focused on one durable concern boundary:
   - session and transport state
-  - operator shell and navigation
+  - agent hub and fleet selection
   - run inspection workspace
   - live orchestration and recovery
-  - remote control and authoring
+  - agent-scoped run control and authoring
 - Prefer adding a new PRD over stretching an existing record across multiple
   workflow boundaries.
 
@@ -37,10 +37,10 @@ This directory stores product requirement documents for the `sigil-web` subproje
 ## Numbering Blocks
 
 - `PRD-0100` to `PRD-0199`: session, transport, and compatibility
-- `PRD-0200` to `PRD-0299`: operator shell and run-list workflows
+- `PRD-0200` to `PRD-0299`: agent hub and fleet-selection workflows
 - `PRD-0300` to `PRD-0399`: run inspection and detail workspace behavior
 - `PRD-0400` to `PRD-0499`: live orchestration and connection recovery
-- `PRD-0500` to `PRD-0599`: remote control and run authoring
+- `PRD-0500` to `PRD-0599`: agent-scoped run control and authoring
 
 ## Current PRDs
 
@@ -49,10 +49,10 @@ This directory stores product requirement documents for the `sigil-web` subproje
 - [PRD-0100 Sigil-Web Session and Connection State Specification](PRD-0100-sigil-web-session-and-connection-state-specification.md):
   WebSocket handshake, compatibility, and connection-state UX contract
 
-### Operator Shell and Run List
+### Agent Hub and Fleet Selection
 
-- [PRD-0200 Sigil-Web Operator Shell and Run List Specification](PRD-0200-sigil-web-operator-shell-and-run-list-specification.md):
-  Operator shell, run list, pagination, and empty-state contract
+- [PRD-0200 Sigil-Web Agent Fleet Hub and Selection Specification](PRD-0200-sigil-web-agent-fleet-hub-and-selection-specification.md):
+  `/agents` command hub, fleet selection, deep-linking, and fleet empty-state contract
 
 ### Run Inspection and Detail Workspace
 
@@ -64,10 +64,10 @@ This directory stores product requirement documents for the `sigil-web` subproje
 - [PRD-0400 Sigil-Web Live Orchestration and Connection Recovery Specification](PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md):
   Live subscription, reconnect, and terminal transition contract
 
-### Remote Control and Run Authoring
+### Agent-Scoped Run Control and Authoring
 
-- [PRD-0500 Sigil-Web Run Control and Authoring Specification](PRD-0500-sigil-web-run-control-and-authoring-specification.md):
-  Inline YAML start and run-stop control contract
+- [PRD-0500 Sigil-Web Agent Run Control and Authoring Specification](PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md):
+  Selected-agent new-run dialog plus run-stop control contract
 
 ## Next PRD
 

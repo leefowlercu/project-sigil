@@ -54,7 +54,7 @@ When the operator attaches the run detail workspace to live updates
 Then the application applies canonical subscription updates within that
 workspace as the run progresses.
 
-### Scenario SCN-0001: Resumes a live run subscription after reconnect without duplicating applied events
+### Scenario SCN-0001: Resumes a live run workspace after reconnect without duplicating applied events
 
 Given the operator is viewing a live run workspace that has already applied
 canonical events  

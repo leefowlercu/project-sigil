@@ -8,7 +8,7 @@ Draft
 
 The core operator workflow in `sigil-web` is inspecting a run in one workspace
 that combines run summary, topology, time-ordered progress, and typed artifact
-detail.
+detail after choosing that run from the `/agents` hub.
 
 ## Goals
 
@@ -24,6 +24,8 @@ detail.
 
 ## Workspace Contract
 
+- The run detail route MUST remain deep-linkable by run ID even when the
+  operator arrived there from a selected-agent state in `/agents`.
 - The run detail route MUST load its primary summary from the app-server read
   surface.
 - The workspace MUST expose:
@@ -45,10 +47,10 @@ detail.
 
 ## Acceptance Scenarios
 
-### Scenario SCN-0000: Opens a run detail workspace with summary tree and timeline panes
+### Scenario SCN-0000: Opens a run detail workspace from the agents hub with summary tree and timeline panes
 
-Given the session is ready and one persisted run is selected  
-When the operator opens that run's detail workspace  
+Given the session is ready and one selected-agent run is selected  
+When the operator opens that run's detail workspace from `/agents`  
 Then the application shows summary, tree, and timeline panes for that run in a
 single workspace.
 

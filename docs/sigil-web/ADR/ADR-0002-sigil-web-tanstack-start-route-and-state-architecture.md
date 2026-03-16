@@ -14,7 +14,8 @@ Accepted
 app-server running over WebSocket. The UI needs one route structure that can:
 
 - bootstrap and monitor the app-server session
-- list and inspect runs
+- manage and inspect connected agents
+- list and inspect runs for a selected agent
 - subscribe to live run updates
 - start and stop runs
 - preserve operator context across refreshes and reconnects
@@ -28,10 +29,11 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - one session store responsible for WebSocket lifecycle, handshake state,
   heartbeat health, and reconnect intent
 - route-level workflow boundaries aligned to the design manifest:
-  - `/connect`
-  - `/runs`
+  - `/agents`
   - `/runs/$runId`
-  - `/runs/new`
+- `/` MUST redirect to `/agents`
+- selected-agent state on `/agents` MUST be deep-linkable with the `agent`
+  search parameter
 - route-state identifiers in the design manifest are the stable names for the
   operator-visible UI states implemented by these routes
 
@@ -40,6 +42,9 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - Session state such as `ready`, `incompatible`, `degraded`, and `reconnecting`
   is application-wide and MUST not be reimplemented independently in individual
   pages.
+- The `/agents` hub MUST own fleet visibility, selected-agent detail, and
+  selected-agent run discovery instead of splitting those concerns across
+  separate connection and run-index pages.
 - Run detail routes MUST compose read-plane calls (`run/read`, `run/tree/read`,
   `run/steps/list`, `run/step/read`, `run/artifact/read`) over one shared
   client/service layer rather than embedding ad hoc protocol calls in route
@@ -80,7 +85,7 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - [ADR-0001 Paper Design Governance](ADR-0001-sigil-web-paper-design-governance.md)
 - [ADR-0003 Generated App-Server Client and Acceptance Lanes](ADR-0003-sigil-web-generated-app-server-client-and-acceptance-lanes.md)
 - [PRD-0100 Session and Connection State](../PRD/PRD-0100-sigil-web-session-and-connection-state-specification.md)
-- [PRD-0200 Operator Shell and Run List](../PRD/PRD-0200-sigil-web-operator-shell-and-run-list-specification.md)
+- [PRD-0200 Agent Fleet Hub and Selection](../PRD/PRD-0200-sigil-web-agent-fleet-hub-and-selection-specification.md)
 - [PRD-0300 Run Detail Workspace](../PRD/PRD-0300-sigil-web-run-detail-workspace-specification.md)
 - [PRD-0400 Live Orchestration and Connection Recovery](../PRD/PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md)
-- [PRD-0500 Run Control and Authoring](../PRD/PRD-0500-sigil-web-run-control-and-authoring-specification.md)
+- [PRD-0500 Agent Run Control and Authoring](../PRD/PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md)
