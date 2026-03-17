@@ -10,8 +10,8 @@ This directory stores architecture decision records for the `sigil-web` subproje
 ## Current ADRs
 
 - [ADR-0001 Sigil-Web Paper Design Governance](ADR-0001-sigil-web-paper-design-governance.md):
-  Paper artboards and the design manifest are the normative visual contract for
-  routed UI states.
+  A routed scenario manifest plus a Paper-only design manifest define how
+  routed scenarios map to one or more verification lanes.
 - [ADR-0002 Sigil-Web TanStack Start Route and State Architecture](ADR-0002-sigil-web-tanstack-start-route-and-state-architecture.md):
   TanStack Start route shell and session-state architecture for the operator
   UI.

@@ -15,6 +15,10 @@ PRD_FILE_RE = re.compile(r"^(PRD-\d{4})-[a-z0-9-]+-specification\.md$")
 PRD_SCENARIO_RE = re.compile(r"^### Scenario (SCN-(\d{4})): (.+)$")
 FEATURE_SCENARIO_RE = re.compile(r"^\s*Scenario: (.+)$")
 
+VERIFICATION_LANES = {"paper", "vitest"}
+LEGACY_FEATURE_TAGS = {"@nonvisual", "@visual"}
+ARTBOARD_NAME_PATTERN = "<prd>--<scenario-id>--<route-id>--<state-id>--<viewport-id>"
+
 
 @dataclass(frozen=True)
 class Scenario:
@@ -30,8 +34,24 @@ class MatrixScenario:
 
 
 @dataclass(frozen=True)
+class ScenarioManifestScenario:
+    scenario: Scenario
+    route_id: str
+    state_id: str
+    lanes: frozenset[str]
+
+
+@dataclass(frozen=True)
+class DesignManifestScenario:
+    scenario: Scenario
+    route_id: str
+    state_id: str
+
+
+@dataclass(frozen=True)
 class SubprojectConfig:
     prd_dir: str
+    scenario_manifest: str | None = None
     design_manifest: str | None = None
 
 
@@ -39,7 +59,8 @@ SUBPROJECTS = {
     "sigil": SubprojectConfig(prd_dir="docs/sigil/PRD"),
     "sigil-web": SubprojectConfig(
         prd_dir="docs/sigil-web/PRD",
-        design_manifest="sigil-web/design/design-manifest.toml",
+        scenario_manifest="sigil-web/verification/scenarios/manifest.toml",
+        design_manifest="sigil-web/verification/design/manifest.toml",
     ),
 }
 
@@ -50,7 +71,10 @@ def repo_root() -> Path:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Verify PRD, MATRIX, and acceptance-title consistency.",
+        description=(
+            "Verify PRD, MATRIX, acceptance-title, scenario-manifest, "
+            "and design-manifest consistency."
+        ),
     )
     parser.add_argument(
         "--subproject",
@@ -61,8 +85,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def parse_prds(prd_dir: Path) -> tuple[list[Scenario], list[str]]:
+def load_toml(path: Path) -> tuple[dict[str, object] | None, list[str]]:
+    if not path.exists():
+        return None, [f"missing TOML file: {path}"]
+
+    try:
+        with path.open("rb") as handle:
+            return tomllib.load(handle), []
+    except tomllib.TOMLDecodeError as err:
+        return None, [f"{path}: invalid TOML ({err})"]
+
+
+def parse_prds(prd_dir: Path) -> tuple[set[str], list[Scenario], list[str]]:
     errors: list[str] = []
+    prd_ids: set[str] = set()
     scenarios: list[Scenario] = []
 
     for path in sorted(prd_dir.glob("PRD-*.md")):
@@ -72,6 +108,7 @@ def parse_prds(prd_dir: Path) -> tuple[list[Scenario], list[str]]:
             continue
 
         prd = match.group(1)
+        prd_ids.add(prd)
         expected = 0
         for line_no, line in enumerate(path.read_text().splitlines(), start=1):
             scenario_match = PRD_SCENARIO_RE.match(line)
@@ -96,7 +133,7 @@ def parse_prds(prd_dir: Path) -> tuple[list[Scenario], list[str]]:
         if count > 1:
             errors.append(f"duplicate PRD scenario title ({count}): {title}")
 
-    return scenarios, errors
+    return prd_ids, scenarios, errors
 
 
 def parse_matrix(matrix_path: Path) -> tuple[list[MatrixScenario], list[str]]:
@@ -137,23 +174,22 @@ def parse_matrix(matrix_path: Path) -> tuple[list[MatrixScenario], list[str]]:
     return scenarios, errors
 
 
-def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str]]:
+def parse_route_ids(routes: object, location_prefix: str) -> tuple[set[str], list[str]]:
     errors: list[str] = []
-    scenarios: list[Scenario] = []
-
-    if not manifest_path.exists():
-        return [], [f"missing design manifest: {manifest_path}"]
-
-    try:
-        with manifest_path.open("rb") as handle:
-            data = tomllib.load(handle)
-    except tomllib.TOMLDecodeError as err:
-        return [], [f"{manifest_path}: invalid TOML ({err})"]
-
     route_ids: set[str] = set()
-    for index, route in enumerate(data.get("route", []), start=1):
+
+    if routes is None:
+        return route_ids, errors
+    if not isinstance(routes, list):
+        return route_ids, [f"{location_prefix} route entries must be an array"]
+
+    for index, route in enumerate(routes, start=1):
+        location = f"{location_prefix}:route[{index}]"
+        if not isinstance(route, dict):
+            errors.append(f"{location} must be a table")
+            continue
+
         route_id = route.get("id")
-        location = f"{manifest_path}:route[{index}]"
         if not isinstance(route_id, str) or not route_id.strip():
             errors.append(f"{location} missing route id")
             continue
@@ -162,10 +198,27 @@ def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str
             continue
         route_ids.add(route_id)
 
+    return route_ids, errors
+
+
+def validate_required_viewports(
+    manifest_path: Path,
+    data: dict[str, object],
+) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
     viewport_ids: set[str] = set()
-    for index, viewport in enumerate(data.get("viewport", []), start=1):
-        viewport_id = viewport.get("id")
+
+    viewports = data.get("viewport", [])
+    if not isinstance(viewports, list):
+        return [], [f"{manifest_path} viewport entries must be an array"]
+
+    for index, viewport in enumerate(viewports, start=1):
         location = f"{manifest_path}:viewport[{index}]"
+        if not isinstance(viewport, dict):
+            errors.append(f"{location} must be a table")
+            continue
+
+        viewport_id = viewport.get("id")
         if not isinstance(viewport_id, str) or not viewport_id.strip():
             errors.append(f"{location} missing viewport id")
             continue
@@ -177,25 +230,103 @@ def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str
     required_viewports = data.get("required_viewports", [])
     if not isinstance(required_viewports, list) or not required_viewports:
         errors.append(f"{manifest_path} missing required_viewports")
-    else:
-        for viewport_id in required_viewports:
-            if viewport_id not in viewport_ids:
-                errors.append(
-                    f"{manifest_path} required viewport not declared: {viewport_id}",
-                )
+        return [], errors
+
+    validated: list[str] = []
+    for viewport_id in required_viewports:
+        if not isinstance(viewport_id, str) or not viewport_id.strip():
+            errors.append(f"{manifest_path} contains blank required_viewports entries")
+            continue
+        if viewport_id not in viewport_ids:
+            errors.append(f"{manifest_path} required viewport not declared: {viewport_id}")
+            continue
+        validated.append(viewport_id)
+
+    return validated, errors
+
+
+def validate_repo_relative_match(
+    root: Path,
+    location: str,
+    file_value: object,
+    match_value: object,
+) -> list[str]:
+    errors: list[str] = []
+
+    if not isinstance(file_value, str) or not file_value.strip():
+        errors.append(f"{location} missing file")
+        return errors
+
+    file_path = Path(file_value)
+    if file_path.is_absolute():
+        errors.append(f"{location} file must be repo-relative")
+        return errors
+
+    resolved = root / file_path
+    if not resolved.exists():
+        errors.append(f"{location} file does not exist: {file_value}")
+        return errors
+
+    if not isinstance(match_value, str) or not match_value.strip():
+        errors.append(f"{location} missing match")
+        return errors
+
+    if match_value not in resolved.read_text():
+        errors.append(f"{location} match not found in {file_value}: {match_value!r}")
+
+    return errors
+
+
+def parse_scenario_manifest(
+    manifest_path: Path,
+    root: Path,
+) -> tuple[list[ScenarioManifestScenario], list[str]]:
+    data, load_errors = load_toml(manifest_path)
+    if data is None:
+        return [], load_errors
+
+    errors: list[str] = list(load_errors)
+    scenarios: list[ScenarioManifestScenario] = []
+
+    if "design_tool" in data or "viewport" in data or "required_viewports" in data:
+        errors.append(
+            f"{manifest_path} contains design metadata; move Paper metadata into sigil-web/verification/design/manifest.toml",
+        )
+    if "artboard_name_pattern" in data:
+        errors.append(
+            f"{manifest_path} contains artboard naming metadata; move it into sigil-web/verification/design/manifest.toml",
+        )
+
+    route_ids, route_errors = parse_route_ids(data.get("route"), str(manifest_path))
+    errors.extend(route_errors)
 
     manifest_scenarios = data.get("scenario", [])
-    if not manifest_scenarios:
+    if not isinstance(manifest_scenarios, list) or not manifest_scenarios:
         errors.append(f"{manifest_path} missing scenario entries")
+        return scenarios, errors
 
     for index, item in enumerate(manifest_scenarios, start=1):
         location = f"{manifest_path}:scenario[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{location} must be a table")
+            continue
+
+        if "presentation" in item or "verification" in item:
+            errors.append(
+                f"{location} uses legacy verification-manifest keys; migrate to scenario.evidence and the design manifest split",
+            )
+
+        if "required_test_ids" in item or "paper_artboards" in item:
+            errors.append(
+                f"{location} contains Paper metadata; move it into sigil-web/verification/design/manifest.toml",
+            )
+
         prd = item.get("prd")
         scenario_id = item.get("scenario_id")
         title = item.get("title")
         route_id = item.get("route_id")
-        required_test_ids = item.get("required_test_ids")
-        paper_artboards = item.get("paper_artboards")
+        state_id = item.get("state_id")
+        fixtures = item.get("fixtures")
 
         if not isinstance(prd, str) or not prd.strip():
             errors.append(f"{location} missing prd")
@@ -211,10 +342,140 @@ def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str
             continue
         if route_id not in route_ids:
             errors.append(f"{location} unknown route_id: {route_id}")
+        if not isinstance(state_id, str) or not state_id.strip():
+            errors.append(f"{location} missing state_id")
+
+        if fixtures is not None:
+            if not isinstance(fixtures, list) or any(
+                not isinstance(entry, str) or not entry.strip() for entry in fixtures
+            ):
+                errors.append(f"{location} contains invalid fixtures entries")
+
+        evidence_items = item.get("evidence")
+        if not isinstance(evidence_items, list) or not evidence_items:
+            errors.append(f"{location} missing evidence entries")
+            evidence_items = []
+
+        lanes: set[str] = set()
+        for evidence_index, evidence in enumerate(evidence_items, start=1):
+            evidence_location = f"{location}:evidence[{evidence_index}]"
+            if not isinstance(evidence, dict):
+                errors.append(f"{evidence_location} must be a table")
+                continue
+
+            lane = evidence.get("lane")
+            if not isinstance(lane, str) or lane not in VERIFICATION_LANES:
+                errors.append(
+                    f"{evidence_location} invalid lane: {lane!r} (expected one of {sorted(VERIFICATION_LANES)})",
+                )
+                continue
+            if lane in lanes:
+                errors.append(f"{evidence_location} duplicate lane: {lane}")
+                continue
+            lanes.add(lane)
+
+            if lane == "vitest":
+                errors.extend(
+                    validate_repo_relative_match(
+                        root,
+                        evidence_location,
+                        evidence.get("file"),
+                        evidence.get("match"),
+                    ),
+                )
+            elif "required_test_ids" in evidence or "paper_artboards" in evidence:
+                errors.append(
+                    f"{evidence_location} inlines Paper metadata; move it into sigil-web/verification/design/manifest.toml",
+                )
+
+        scenarios.append(
+            ScenarioManifestScenario(
+                scenario=Scenario(prd=prd, scenario_id=scenario_id, title=title),
+                route_id=route_id,
+                state_id=state_id if isinstance(state_id, str) else "",
+                lanes=frozenset(lanes),
+            ),
+        )
+
+    title_counts = Counter(item.scenario.title for item in scenarios)
+    for title, count in sorted(title_counts.items()):
+        if count > 1:
+            errors.append(f"duplicate scenario-manifest title ({count}): {title}")
+
+    return scenarios, errors
+
+
+def parse_design_manifest(manifest_path: Path) -> tuple[list[DesignManifestScenario], list[str]]:
+    data, load_errors = load_toml(manifest_path)
+    if data is None:
+        return [], load_errors
+
+    errors: list[str] = list(load_errors)
+    scenarios: list[DesignManifestScenario] = []
+
+    design_tool = data.get("design_tool")
+    if not isinstance(design_tool, str) or not design_tool.strip():
+        errors.append(f"{manifest_path} missing design_tool")
+
+    artboard_name_pattern = data.get("artboard_name_pattern")
+    if artboard_name_pattern != ARTBOARD_NAME_PATTERN:
+        errors.append(
+            f"{manifest_path} artboard_name_pattern must be {ARTBOARD_NAME_PATTERN!r}",
+        )
+
+    required_viewports, viewport_errors = validate_required_viewports(manifest_path, data)
+    errors.extend(viewport_errors)
+
+    if "route" in data:
+        errors.append(
+            f"{manifest_path} contains route registry metadata; keep route definitions in sigil-web/verification/scenarios/manifest.toml",
+        )
+
+    manifest_scenarios = data.get("scenario", [])
+    if not isinstance(manifest_scenarios, list):
+        errors.append(f"{manifest_path} scenario entries must be an array")
+        return scenarios, errors
+
+    for index, item in enumerate(manifest_scenarios, start=1):
+        location = f"{manifest_path}:scenario[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{location} must be a table")
+            continue
+
+        if "fixtures" in item or "evidence" in item or "verification" in item:
+            errors.append(
+                f"{location} contains scenario-registry metadata; keep fixtures and evidence in sigil-web/verification/scenarios/manifest.toml",
+            )
+
+        prd = item.get("prd")
+        scenario_id = item.get("scenario_id")
+        title = item.get("title")
+        route_id = item.get("route_id")
+        state_id = item.get("state_id")
+        required_test_ids = item.get("required_test_ids")
+        paper_artboards = item.get("paper_artboards")
+
+        if not isinstance(prd, str) or not prd.strip():
+            errors.append(f"{location} missing prd")
+            continue
+        if not isinstance(scenario_id, str) or not scenario_id.strip():
+            errors.append(f"{location} missing scenario_id")
+            continue
+        if not isinstance(title, str) or not title.strip():
+            errors.append(f"{location} missing title")
+            continue
+        if not isinstance(route_id, str) or not route_id.strip():
+            errors.append(f"{location} missing route_id")
+            continue
+        if not isinstance(state_id, str) or not state_id.strip():
+            errors.append(f"{location} missing state_id")
+            continue
 
         if not isinstance(required_test_ids, list) or not required_test_ids:
             errors.append(f"{location} missing required_test_ids")
-        elif any(not isinstance(item, str) or not item.strip() for item in required_test_ids):
+        elif any(
+            not isinstance(entry, str) or not entry.strip() for entry in required_test_ids
+        ):
             errors.append(f"{location} contains blank required_test_ids entries")
 
         if not isinstance(paper_artboards, dict):
@@ -223,16 +484,29 @@ def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str
             for viewport_id in required_viewports:
                 artboard = paper_artboards.get(viewport_id)
                 if not isinstance(artboard, str) or not artboard.strip():
+                    errors.append(f"{location} missing paper_artboards entry for {viewport_id}")
+                    continue
+
+                expected_artboard = (
+                    f"{prd}--{scenario_id}--{route_id}--{state_id}--{viewport_id}"
+                )
+                if artboard != expected_artboard:
                     errors.append(
-                        f"{location} missing paper_artboards entry for {viewport_id}",
+                        f"{location} paper_artboards[{viewport_id!r}] must be {expected_artboard!r}",
                     )
 
-        scenarios.append(Scenario(prd=prd, scenario_id=scenario_id, title=title))
+        scenarios.append(
+            DesignManifestScenario(
+                scenario=Scenario(prd=prd, scenario_id=scenario_id, title=title),
+                route_id=route_id,
+                state_id=state_id,
+            ),
+        )
 
-    title_counts = Counter(item.title for item in scenarios)
+    title_counts = Counter(item.scenario.title for item in scenarios)
     for title, count in sorted(title_counts.items()):
         if count > 1:
-            errors.append(f"duplicate design manifest scenario title ({count}): {title}")
+            errors.append(f"duplicate design-manifest title ({count}): {title}")
 
     return scenarios, errors
 
@@ -240,11 +514,33 @@ def parse_design_manifest(manifest_path: Path) -> tuple[list[Scenario], list[str
 def parse_feature(feature_path: Path) -> tuple[set[str], list[str]]:
     errors: list[str] = []
     titles: list[str] = []
+    pending_tags: set[str] = set()
 
-    for line in feature_path.read_text().splitlines():
-        match = FEATURE_SCENARIO_RE.match(line)
-        if match is not None:
-            titles.append(match.group(1).strip())
+    for line_no, line in enumerate(feature_path.read_text().splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        if stripped.startswith("@"):
+            tokens = stripped.split()
+            invalid_tokens = [token for token in tokens if not token.startswith("@")]
+            if invalid_tokens:
+                errors.append(f"{feature_path}:{line_no} invalid feature tags line: {stripped!r}")
+            for token in tokens:
+                if token in LEGACY_FEATURE_TAGS:
+                    errors.append(
+                        f"{feature_path}:{line_no} remove legacy feature tag {token}; lane ownership now lives in sigil-web/verification/scenarios/manifest.toml",
+                    )
+            pending_tags.update(tokens)
+            continue
+
+        scenario_match = FEATURE_SCENARIO_RE.match(line)
+        if scenario_match is not None:
+            titles.append(scenario_match.group(1).strip())
+            pending_tags.clear()
+            continue
+
+        pending_tags.clear()
 
     counts = Counter(titles)
     for title, count in sorted(counts.items()):
@@ -260,7 +556,7 @@ def main() -> int:
     config = SUBPROJECTS[args.subproject]
     prd_dir = root / config.prd_dir
     matrix_path = prd_dir / "MATRIX.md"
-    prd_scenarios, prd_errors = parse_prds(prd_dir)
+    prd_ids, prd_scenarios, prd_errors = parse_prds(prd_dir)
     matrix_scenarios, matrix_errors = parse_matrix(matrix_path)
 
     feature_titles_by_file: dict[str, set[str]] = {}
@@ -274,12 +570,28 @@ def main() -> int:
         feature_titles_by_file[feature_file] = feature_titles
         feature_errors.extend(file_errors)
 
-    design_scenarios: list[Scenario] = []
-    design_errors: list[str] = []
-    if config.design_manifest is not None:
-        design_scenarios, design_errors = parse_design_manifest(root / config.design_manifest)
+    scenario_manifest_scenarios: list[ScenarioManifestScenario] = []
+    scenario_manifest_errors: list[str] = []
+    if config.scenario_manifest is not None:
+        scenario_manifest_scenarios, scenario_manifest_errors = parse_scenario_manifest(
+            root / config.scenario_manifest,
+            root,
+        )
 
-    errors = [*prd_errors, *matrix_errors, *feature_errors, *design_errors]
+    design_manifest_scenarios: list[DesignManifestScenario] = []
+    design_manifest_errors: list[str] = []
+    if config.design_manifest is not None:
+        design_manifest_scenarios, design_manifest_errors = parse_design_manifest(
+            root / config.design_manifest,
+        )
+
+    errors = [
+        *prd_errors,
+        *matrix_errors,
+        *feature_errors,
+        *scenario_manifest_errors,
+        *design_manifest_errors,
+    ]
 
     prd_set = set(prd_scenarios)
     matrix_set = {item.scenario for item in matrix_scenarios}
@@ -288,13 +600,9 @@ def main() -> int:
     missing_from_prd = sorted(matrix_set - prd_set, key=lambda item: (item.prd, item.scenario_id))
 
     for scenario in missing_from_matrix:
-        errors.append(
-            f"missing from MATRIX: {scenario.prd} {scenario.scenario_id} {scenario.title}",
-        )
+        errors.append(f"missing from MATRIX: {scenario.prd} {scenario.scenario_id} {scenario.title}")
     for scenario in missing_from_prd:
-        errors.append(
-            f"missing from PRDs: {scenario.prd} {scenario.scenario_id} {scenario.title}",
-        )
+        errors.append(f"missing from PRDs: {scenario.prd} {scenario.scenario_id} {scenario.title}")
 
     for matrix_scenario in matrix_scenarios:
         feature_titles = feature_titles_by_file.get(matrix_scenario.feature_file, set())
@@ -307,19 +615,66 @@ def main() -> int:
                 + f" ({matrix_scenario.feature_file})",
             )
 
-    if config.design_manifest is not None:
-        design_set = set(design_scenarios)
-        missing_from_design = sorted(matrix_set - design_set, key=lambda item: (item.prd, item.scenario_id))
-        missing_from_matrix = sorted(design_set - matrix_set, key=lambda item: (item.prd, item.scenario_id))
+    if config.scenario_manifest is not None:
+        scenario_manifest_set = {item.scenario for item in scenario_manifest_scenarios}
+        missing_from_scenario_manifest = sorted(
+            matrix_set - scenario_manifest_set,
+            key=lambda item: (item.prd, item.scenario_id),
+        )
+        missing_from_matrix_or_prd = sorted(
+            scenario_manifest_set - matrix_set,
+            key=lambda item: (item.prd, item.scenario_id),
+        )
 
-        for scenario in missing_from_design:
+        for scenario in missing_from_scenario_manifest:
             errors.append(
-                f"missing from design manifest: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+                f"missing from scenario manifest: {scenario.prd} {scenario.scenario_id} {scenario.title}",
             )
-        for scenario in missing_from_matrix:
+        for scenario in missing_from_matrix_or_prd:
             errors.append(
-                f"missing from MATRIX or PRDs for design manifest: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+                f"missing from MATRIX or PRDs for scenario manifest: {scenario.prd} {scenario.scenario_id} {scenario.title}",
             )
+
+    if config.scenario_manifest is not None and config.design_manifest is not None:
+        scenario_manifest_by_scenario = {
+            item.scenario: item for item in scenario_manifest_scenarios
+        }
+        design_set = {item.scenario for item in design_manifest_scenarios}
+        paper_scenarios = {
+            item.scenario for item in scenario_manifest_scenarios if "paper" in item.lanes
+        }
+
+        missing_from_design_manifest = sorted(
+            paper_scenarios - design_set,
+            key=lambda item: (item.prd, item.scenario_id),
+        )
+        extra_in_design_manifest = sorted(
+            design_set - paper_scenarios,
+            key=lambda item: (item.prd, item.scenario_id),
+        )
+
+        for scenario in missing_from_design_manifest:
+            errors.append(
+                f"missing from design manifest for paper evidence: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+            )
+        for scenario in extra_in_design_manifest:
+            errors.append(
+                f"design manifest scenario missing paper evidence lane: {scenario.prd} {scenario.scenario_id} {scenario.title}",
+            )
+
+        for design_scenario in design_manifest_scenarios:
+            scenario_manifest_scenario = scenario_manifest_by_scenario.get(design_scenario.scenario)
+            if scenario_manifest_scenario is None:
+                continue
+
+            if design_scenario.route_id != scenario_manifest_scenario.route_id:
+                errors.append(
+                    f"route_id mismatch between manifests: {design_scenario.scenario.prd} {design_scenario.scenario.scenario_id}",
+                )
+            if design_scenario.state_id != scenario_manifest_scenario.state_id:
+                errors.append(
+                    f"state_id mismatch between manifests: {design_scenario.scenario.prd} {design_scenario.scenario.scenario_id}",
+                )
 
     if errors:
         for error in errors:
@@ -328,12 +683,14 @@ def main() -> int:
 
     summary = [
         f"verified {args.subproject} specs:",
-        f"prds={len({scenario.prd for scenario in prd_scenarios})}",
+        f"prds={len(prd_ids)}",
         f"scenarios={len(prd_scenarios)}",
-        f"feature_titles={sum(len(titles) for titles in feature_titles_by_file.values())}",
+        f"feature_titles={sum(len(items) for items in feature_titles_by_file.values())}",
     ]
+    if config.scenario_manifest is not None:
+        summary.append(f"scenario_scenarios={len(scenario_manifest_scenarios)}")
     if config.design_manifest is not None:
-        summary.append(f"design_scenarios={len(design_scenarios)}")
+        summary.append(f"design_scenarios={len(design_manifest_scenarios)}")
     print(*summary)
     return 0
 

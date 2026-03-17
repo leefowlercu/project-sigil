@@ -28,13 +28,13 @@ Sigil-web adopts TanStack Start with these architecture rules:
   navigation
 - one session store responsible for WebSocket lifecycle, handshake state,
   heartbeat health, and reconnect intent
-- route-level workflow boundaries aligned to the design manifest:
+- route-level workflow boundaries aligned to the verification manifest:
   - `/agents`
   - `/runs/$runId`
 - `/` MUST redirect to `/agents`
 - selected-agent state on `/agents` MUST be deep-linkable with the `agent`
   search parameter
-- route-state identifiers in the design manifest are the stable names for the
+- route-state identifiers in the verification manifest are the stable names for the
   operator-visible UI states implemented by these routes
 
 ## Decision Details
@@ -84,8 +84,6 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - [Sigil-Web ADR Index](README.md)
 - [ADR-0001 Paper Design Governance](ADR-0001-sigil-web-paper-design-governance.md)
 - [ADR-0003 Generated App-Server Client and Acceptance Lanes](ADR-0003-sigil-web-generated-app-server-client-and-acceptance-lanes.md)
-- [PRD-0100 Session and Connection State](../PRD/PRD-0100-sigil-web-session-and-connection-state-specification.md)
-- [PRD-0200 Agent Fleet Hub and Selection](../PRD/PRD-0200-sigil-web-agent-fleet-hub-and-selection-specification.md)
-- [PRD-0300 Run Detail Workspace](../PRD/PRD-0300-sigil-web-run-detail-workspace-specification.md)
-- [PRD-0400 Live Orchestration and Connection Recovery](../PRD/PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md)
-- [PRD-0500 Agent Run Control and Authoring](../PRD/PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md)
+- [PRD-0100 Root and Index Route](../PRD/PRD-0100-sigil-web-root-index-route-specification.md)
+- [PRD-0200 Agents Route](../PRD/PRD-0200-sigil-web-agents-route-specification.md)
+- [PRD-0300 Run Detail Route](../PRD/PRD-0300-sigil-web-run-detail-route-specification.md)
