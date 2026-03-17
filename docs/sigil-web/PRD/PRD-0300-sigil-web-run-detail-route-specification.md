@@ -23,6 +23,8 @@ re-specified from a clean slate.
 
 ## Route Contract
 
+- The `/runs/$runId` route family MUST inherit the application-shell layout
+  contract defined in `PRD-0150`.
 - The `/runs/$runId` route family remains the owning route family for future
   run-detail behavior.
 - No acceptance scenarios are currently defined for this route family; behavior

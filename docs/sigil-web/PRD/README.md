@@ -22,7 +22,7 @@ subproject.
 
 - Keep PRDs behavior-centric and acceptance-backed.
 - Keep each PRD focused on one route family:
-  - root and index route
+  - root, index, and root-owned application shell behavior
   - `/agents`
   - `/runs/$runId`
 - Prefer adding a new PRD over stretching an existing record across multiple
@@ -44,16 +44,18 @@ subproject.
 
 ## Numbering Blocks
 
-- `PRD-0100` to `PRD-0199`: root and index route behavior
+- `PRD-0100` to `PRD-0199`: root, index, and application shell behavior
 - `PRD-0200` to `PRD-0299`: `/agents` route behavior
 - `PRD-0300` to `PRD-0399`: `/runs/$runId` route behavior
 
 ## Current PRDs
 
-### Root and Index Route
+### Root, Index, and Application Shell
 
 - [PRD-0100 Sigil-Web Root and Index Route Specification](PRD-0100-sigil-web-root-index-route-specification.md):
   Root-route redirect contract for handing operators into `/agents`
+- [PRD-0150 Sigil-Web Application Shell Layout Specification](PRD-0150-sigil-web-application-shell-layout-specification.md):
+  Application-wide viewport-constrained shell contract for routed workspaces
 
 ### Agents Route
 
@@ -81,6 +83,6 @@ open number in that block.
 
 Examples:
 
-- `docs/sigil-web/PRD/PRD-0150-<slug>-specification.md` for new root or index route behavior
+- `docs/sigil-web/PRD/PRD-0150-<slug>-specification.md` for new root, index, or application shell behavior
 - `docs/sigil-web/PRD/PRD-0250-<slug>-specification.md` for new `/agents` route behavior
 - `docs/sigil-web/PRD/PRD-0350-<slug>-specification.md` for new `/runs/$runId` route behavior

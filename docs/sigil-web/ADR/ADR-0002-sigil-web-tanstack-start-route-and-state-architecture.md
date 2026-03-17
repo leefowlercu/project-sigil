@@ -24,11 +24,12 @@ app-server running over WebSocket. The UI needs one route structure that can:
 
 Sigil-web adopts TanStack Start with these architecture rules:
 
-- one application shell route that owns connection status and primary
-  navigation
+- one application shell route that owns connection status, primary
+  navigation, and viewport-constrained workspace layout
 - one session store responsible for WebSocket lifecycle, handshake state,
   heartbeat health, and reconnect intent
 - route-level workflow boundaries aligned to the verification manifest:
+  - `__root__` application shell
   - `/agents`
   - `/runs/$runId`
 - `/` MUST redirect to `/agents`
@@ -42,6 +43,12 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - Session state such as `ready`, `incompatible`, `degraded`, and `reconnecting`
   is application-wide and MUST not be reimplemented independently in individual
   pages.
+- On supported desktop viewports, the root application shell MUST keep routed
+  workspaces inside one viewport and move overflow into internal panes rather
+  than document-level scrolling.
+- The root application shell MUST define one compact-height fallback policy so
+  shorter viewports preserve access to primary navigation, primary context, and
+  primary actions consistently across routes.
 - The `/agents` hub MUST own fleet visibility, selected-agent detail, and
   selected-agent run discovery instead of splitting those concerns across
   separate connection and run-index pages.
@@ -85,5 +92,6 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - [ADR-0001 Paper Design Governance](ADR-0001-sigil-web-paper-design-governance.md)
 - [ADR-0003 Generated App-Server Client and Acceptance Lanes](ADR-0003-sigil-web-generated-app-server-client-and-acceptance-lanes.md)
 - [PRD-0100 Root and Index Route](../PRD/PRD-0100-sigil-web-root-index-route-specification.md)
+- [PRD-0150 Application Shell Layout](../PRD/PRD-0150-sigil-web-application-shell-layout-specification.md)
 - [PRD-0200 Agents Route](../PRD/PRD-0200-sigil-web-agents-route-specification.md)
 - [PRD-0300 Run Detail Route](../PRD/PRD-0300-sigil-web-run-detail-route-specification.md)

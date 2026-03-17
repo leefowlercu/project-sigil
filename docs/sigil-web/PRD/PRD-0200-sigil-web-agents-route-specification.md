@@ -23,6 +23,8 @@ deep-linking through route search state.
 
 ## Route Contract
 
+- The `/agents` route family MUST inherit the application-shell layout contract
+  defined in `PRD-0150`.
 - The `/agents` route family MUST support selected-agent deep-linking through
   the `agent` search parameter.
 - Opening `/agents?agent=<agent-id>` MUST preserve the selected-agent intent in

@@ -17,6 +17,8 @@ workflow without maintaining a second home-screen contract.
 
 ## Non-Goals
 
+- Defining application-shell layout behavior beyond the root-route handoff;
+  `PRD-0150` owns that contract.
 - Defining `/agents` route behavior in detail.
 - Defining `/runs/$runId` route behavior in detail.
 
