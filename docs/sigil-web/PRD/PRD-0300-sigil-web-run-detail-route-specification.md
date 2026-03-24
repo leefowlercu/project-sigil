@@ -8,7 +8,7 @@ Draft
 
 The `/runs/$runId` route family remains the owner of the run-detail interaction
 contract in `sigil-web`. The first shipped run-detail surface is currently the
-shared run-detail pane embedded in `/agents`, but that embedding does not
+shared run-detail pane embedded in `/`, but that embedding does not
 change the owning route family or the operator-visible behavior that future
 dedicated run-detail routes must preserve.
 
@@ -38,7 +38,7 @@ dedicated run-detail routes must preserve.
   control near the bottom edge of the pane.
 - Activating the `Scroll to bottom` control in a live run MUST return the
   timeline to the latest event and re-arm automatic live following.
-- Embedded run-detail surfaces, including `/agents` renderings of the shared
+- Embedded run-detail surfaces, including `/` renderings of the shared
   run-detail pane, MUST preserve this same interaction contract until the
   dedicated `/runs/$runId` route family is populated.
 

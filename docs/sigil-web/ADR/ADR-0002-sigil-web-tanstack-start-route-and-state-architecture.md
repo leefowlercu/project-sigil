@@ -30,10 +30,9 @@ Sigil-web adopts TanStack Start with these architecture rules:
   heartbeat health, and reconnect intent
 - route-level workflow boundaries aligned to the verification manifest:
   - `__root__` application shell
-  - `/agents`
+  - `/`
   - `/runs/$runId`
-- `/` MUST redirect to `/agents`
-- selected-agent state on `/agents` MUST be deep-linkable with the `agent`
+- selected-agent state on `/` MUST be deep-linkable with the `agent`
   search parameter
 - route-state identifiers in the verification manifest are the stable names for the
   operator-visible UI states implemented by these routes
@@ -49,7 +48,7 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - The root application shell MUST define one compact-height fallback policy so
   shorter viewports preserve access to primary navigation, primary context, and
   primary actions consistently across routes.
-- The `/agents` hub MUST own fleet visibility, selected-agent detail, and
+- The root route MUST own fleet visibility, selected-agent detail, and
   selected-agent run discovery instead of splitting those concerns across
   separate connection and run-index pages.
 - Run detail routes MUST compose read-plane calls (`run/read`, `run/tree/read`,
@@ -93,5 +92,4 @@ Sigil-web adopts TanStack Start with these architecture rules:
 - [ADR-0003 Generated App-Server Client and Acceptance Lanes](ADR-0003-sigil-web-generated-app-server-client-and-acceptance-lanes.md)
 - [PRD-0100 Root and Index Route](../PRD/PRD-0100-sigil-web-root-index-route-specification.md)
 - [PRD-0150 Application Shell Layout](../PRD/PRD-0150-sigil-web-application-shell-layout-specification.md)
-- [PRD-0200 Agents Route](../PRD/PRD-0200-sigil-web-agents-route-specification.md)
 - [PRD-0300 Run Detail Route](../PRD/PRD-0300-sigil-web-run-detail-route-specification.md)

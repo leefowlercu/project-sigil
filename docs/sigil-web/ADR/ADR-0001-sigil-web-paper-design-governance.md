@@ -122,7 +122,6 @@ Sigil-web adopts these design-governance rules:
 
 - [Sigil-Web ADR Index](README.md)
 - [PRD-0100 Root and Index Route](../PRD/PRD-0100-sigil-web-root-index-route-specification.md)
-- [PRD-0200 Agents Route](../PRD/PRD-0200-sigil-web-agents-route-specification.md)
 - [PRD-0300 Run Detail Route](../PRD/PRD-0300-sigil-web-run-detail-route-specification.md)
 - [`sigil-web/verification/scenarios/manifest.toml`](../../../sigil-web/verification/scenarios/manifest.toml)
 - [`sigil-web/verification/design/manifest.toml`](../../../sigil-web/verification/design/manifest.toml)

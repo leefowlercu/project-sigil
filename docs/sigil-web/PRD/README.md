@@ -23,7 +23,6 @@ subproject.
 - Keep PRDs behavior-centric and acceptance-backed.
 - Keep each PRD focused on one route family:
   - root, index, and root-owned application shell behavior
-  - `/agents`
   - `/runs/$runId`
 - Prefer adding a new PRD over stretching an existing record across multiple
   route families.
@@ -45,7 +44,8 @@ subproject.
 ## Numbering Blocks
 
 - `PRD-0100` to `PRD-0199`: root, index, and application shell behavior
-- `PRD-0200` to `PRD-0299`: `/agents` route behavior
+- `PRD-0200` to `PRD-0299`: retired route-family slot previously used for the
+  removed `/agents` route
 - `PRD-0300` to `PRD-0399`: `/runs/$runId` route behavior
 
 ## Current PRDs
@@ -53,14 +53,9 @@ subproject.
 ### Root, Index, and Application Shell
 
 - [PRD-0100 Sigil-Web Root and Index Route Specification](PRD-0100-sigil-web-root-index-route-specification.md):
-  Root-route redirect contract for handing operators into `/agents`
+  Root-route workspace and selected-agent deep-link contract
 - [PRD-0150 Sigil-Web Application Shell Layout Specification](PRD-0150-sigil-web-application-shell-layout-specification.md):
   Application-wide viewport-constrained shell contract for routed workspaces
-
-### Agents Route
-
-- [PRD-0200 Sigil-Web Agents Route Specification](PRD-0200-sigil-web-agents-route-specification.md):
-  Minimal `/agents` route contract centered on selected-agent deep-linking
 
 ### Run Detail Route
 
@@ -71,10 +66,10 @@ subproject.
 ## Legacy Migration Map
 
 - `PRD-0100-sigil-web-session-and-connection-state-specification.md` -> `PRD-0100-sigil-web-root-index-route-specification.md`
-- `PRD-0200-sigil-web-agent-fleet-hub-and-selection-specification.md` -> `PRD-0200-sigil-web-agents-route-specification.md`
+- `PRD-0200-sigil-web-agent-fleet-hub-and-selection-specification.md` -> retired; root route now owns the primary agent workspace and selected-agent route state under `PRD-0100`
 - `PRD-0300-sigil-web-run-detail-workspace-specification.md` -> `PRD-0300-sigil-web-run-detail-route-specification.md`
 - `PRD-0400-sigil-web-live-orchestration-and-connection-recovery-specification.md` -> retired; future `/runs/$runId` behavior lands under `PRD-0300`
-- `PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md` -> retired; future `/agents` or `/runs/$runId` behavior lands under the route-owned PRDs
+- `PRD-0500-sigil-web-agent-run-control-and-authoring-specification.md` -> retired; future root-route or `/runs/$runId` behavior lands under the route-owned PRDs
 
 ## Next PRD
 
@@ -84,5 +79,4 @@ open number in that block.
 Examples:
 
 - `docs/sigil-web/PRD/PRD-0150-<slug>-specification.md` for new root, index, or application shell behavior
-- `docs/sigil-web/PRD/PRD-0250-<slug>-specification.md` for new `/agents` route behavior
 - `docs/sigil-web/PRD/PRD-0350-<slug>-specification.md` for new `/runs/$runId` route behavior

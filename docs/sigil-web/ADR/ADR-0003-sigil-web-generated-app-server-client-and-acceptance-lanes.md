@@ -80,5 +80,4 @@ Sigil-web adopts these contract and testing rules:
 - [ADR-0001 Paper Design Governance](ADR-0001-sigil-web-paper-design-governance.md)
 - [ADR-0002 TanStack Start Route and State Architecture](ADR-0002-sigil-web-tanstack-start-route-and-state-architecture.md)
 - [PRD-0100 Root and Index Route](../PRD/PRD-0100-sigil-web-root-index-route-specification.md)
-- [PRD-0200 Agents Route](../PRD/PRD-0200-sigil-web-agents-route-specification.md)
 - [PRD-0300 Run Detail Route](../PRD/PRD-0300-sigil-web-run-detail-route-specification.md)

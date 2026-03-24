@@ -23,7 +23,7 @@ the desktop target.
 
 ## Non-Goals
 
-- Defining `/agents` route content or selection behavior in detail.
+- Defining root-route workspace content or selected-agent behavior in detail.
 - Defining `/runs/$runId` route content or live orchestration behavior in
   detail.
 - Defining mobile-first layout behavior beyond the compact-height fallback.
