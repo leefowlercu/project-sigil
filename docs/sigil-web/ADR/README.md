@@ -16,8 +16,8 @@ This directory stores architecture decision records for the `sigil-web` subproje
   TanStack Start route shell and session-state architecture for the operator
   UI.
 - [ADR-0003 Sigil-Web Generated App-Server Client and Acceptance Lanes](ADR-0003-sigil-web-generated-app-server-client-and-acceptance-lanes.md):
-  Generated TypeScript client bindings plus fake-server and real-server
-  acceptance lanes.
+  Generated TypeScript client bindings plus the scripted `agent-browser`
+  acceptance harness.
 
 ## Next ADR
 

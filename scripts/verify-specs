@@ -15,7 +15,7 @@ PRD_FILE_RE = re.compile(r"^(PRD-\d{4})-[a-z0-9-]+-specification\.md$")
 PRD_SCENARIO_RE = re.compile(r"^### Scenario (SCN-(\d{4})): (.+)$")
 FEATURE_SCENARIO_RE = re.compile(r"^\s*Scenario: (.+)$")
 
-VERIFICATION_LANES = {"paper", "vitest"}
+VERIFICATION_LANES = {"agent-browser", "paper", "vitest"}
 LEGACY_FEATURE_TAGS = {"@nonvisual", "@visual"}
 ARTBOARD_NAME_PATTERN = "<prd>--<scenario-id>--<route-id>--<state-id>--<viewport-id>"
 
@@ -369,12 +369,18 @@ def parse_scenario_manifest(
                     f"{evidence_location} invalid lane: {lane!r} (expected one of {sorted(VERIFICATION_LANES)})",
                 )
                 continue
-            if lane in lanes:
-                errors.append(f"{evidence_location} duplicate lane: {lane}")
+            mode = evidence.get("mode")
+            lane_key = lane
+            if mode is not None:
+                errors.append(f"{evidence_location} unexpected mode for lane {lane!r}")
                 continue
-            lanes.add(lane)
 
-            if lane == "vitest":
+            if lane_key in lanes:
+                errors.append(f"{evidence_location} duplicate lane: {lane_key}")
+                continue
+            lanes.add(lane_key)
+
+            if lane in {"agent-browser", "vitest"}:
                 errors.extend(
                     validate_repo_relative_match(
                         root,
