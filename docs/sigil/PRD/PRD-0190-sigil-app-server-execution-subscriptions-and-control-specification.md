@@ -13,10 +13,14 @@ semantics for remote clients.
 
 The implemented app-server execution and control plane now exposes:
 
+- `runs/list`
 - `run/start`
+- `runs/subscribe`
+- `runs/unsubscribe`
 - `run/subscribe`
 - `run/unsubscribe`
 - `run/stop`
+- `runs/changed`
 - canonical event replay and resume via `afterSeq`
 - app-level live notifications layered on canonical event delivery
 
@@ -25,6 +29,8 @@ The implemented app-server execution and control plane now exposes:
 - Define the v1 JSON-RPC execution, subscription, and stop-control surface.
 - Preserve current runtime authority and stop semantics across remote control.
 - Keep canonical per-run event `seq` as the resume and de-duplication key.
+- Define one instance-level live run-summary subscription surface for rich
+  clients that need the current state of the configured app-server run corpus.
 - Keep app-server control handlers thin over shared runtime and control
   services instead of inventing a second run-control stack.
 
@@ -56,6 +62,33 @@ The implemented app-server execution and control plane now exposes:
 
 ## Subscription Contract
 
+- `runs/subscribe` MUST return one fresh authoritative snapshot in
+  `payload.items` plus the collection `payload.revision`.
+- `runs/subscribe` fresh snapshot ordering MUST match `runs/list`
+  newest-first semantics.
+- `runs/subscribe` MUST return the full configured app-server run corpus rather
+  than a paged or filtered subset.
+- `runs/changed` MUST carry one monotonic `revision` plus one typed collection
+  delta in `payload.kind`.
+- `runs/changed` `payload.kind=upsert` MUST carry one full `RunSummaryView` for
+  each new or changed run summary detected after subscription starts.
+- `runs/changed` `payload.kind=remove` MUST carry the removed `runId` when one
+  previously indexed run disappears from the configured corpus.
+- `runs/changed` `payload.kind=reset` MUST instruct clients to fetch one fresh
+  authoritative snapshot before applying later deltas.
+- `runs/changed` MUST be derived from the shared run-summary read path rather
+  than from ad hoc mutation of notification payload state.
+- `runs/changed` MUST NOT require a concurrent `run/subscribe` for the same
+  run.
+- Duplicate `runs/subscribe` calls on one connection MUST replace the earlier
+  instance-level subscription instead of creating duplicate live delivery.
+- `runs/unsubscribe` MUST be idempotent and connection-local.
+- Clients that detect a stale idle connection through a missed-heartbeat window
+  MUST be able to reconnect, reinitialize, and issue a fresh `runs/subscribe`
+  request to receive a new authoritative snapshot before subsequent
+  `runs/changed` delivery.
+- `runs/subscribe` and `runs/changed` MUST NOT define resume cursors,
+  canonical-event replay, or missed-update replay in v1.
 - `run/subscribe` MUST support:
   - fresh attach without `afterSeq`
   - resume attach with `afterSeq`
@@ -207,3 +240,59 @@ And the client reconnects, reinitializes, and reissues `run/subscribe` with
 `afterSeq` equal to the highest applied canonical event sequence  
 Then the server resumes canonical live delivery with only events having
 `seq > afterSeq` and without duplicate or missing canonical event sequences.
+
+### Scenario SCN-0009: Serves fresh runs subscribe snapshot after initialize handshake on stdio
+
+Given persisted app-server runs exist in the configured run directory  
+When a client completes `initialize` and `initialized` on the stdio transport  
+And the client requests `runs/subscribe`  
+Then the server returns `payload.items` as one authoritative newest-first run
+summary snapshot for the configured app-server run corpus.
+
+### Scenario SCN-0010: Delivers live runs changed upserts for new or changed runs after initialize handshake on stdio
+
+Given one non-terminal run exists in the configured app-server run directory  
+When a client completes `initialize` and `initialized` on the stdio transport  
+And the client requests `runs/subscribe`  
+Then the client receives `runs/changed` notifications with
+`payload.kind=upsert` as that run summary
+changes.
+
+### Scenario SCN-0011: Delivers live runs changed removals when a persisted run disappears after subscribe
+
+Given one persisted run exists in the configured app-server run directory  
+When a client completes `initialize` and `initialized` on the stdio transport  
+And the client requests `runs/subscribe`  
+And that persisted run directory is removed  
+Then the client receives one `runs/changed` notification with
+`payload.kind=remove` for that `runId`.
+
+### Scenario SCN-0012: Unsubscribes runs subscribe idempotently after initialize handshake on stdio
+
+Given persisted app-server runs exist in the configured run directory  
+When a client completes `initialize` and `initialized` on the stdio transport  
+And the client requests `runs/subscribe`  
+And the client requests `runs/unsubscribe` twice  
+Then the first response reports `payload.unsubscribed=true`  
+And the second response reports `payload.unsubscribed=false`.
+
+### Scenario SCN-0013: Replaces duplicate runs subscribe requests without duplicate live delivery after initialize handshake on stdio
+
+Given one non-terminal run exists in the configured app-server run directory  
+When a client completes `initialize` and `initialized` on the stdio transport  
+And the client requests `runs/subscribe` twice on the same connection  
+Then the server replaces the earlier instance-level subscription  
+And the client still receives one `runs/changed` delivery for each changed run
+summary.
+
+### Scenario SCN-0014: Reconnects and resubscribes runs subscribe after missed heartbeat on WebSocket with fresh authoritative snapshot
+
+Given one non-terminal run exists in the configured app-server run directory  
+And one WebSocket client has already completed `initialize`, `initialized`, and
+fresh `runs/subscribe`  
+When the client misses the idle `server/heartbeat` window and treats the
+connection as stale  
+And the client reconnects, reinitializes, and reissues `runs/subscribe`  
+Then the server returns a fresh authoritative `payload.items` snapshot  
+And subsequent `runs/changed` delivery reflects later run-summary changes
+without replaying missed intermediate updates.

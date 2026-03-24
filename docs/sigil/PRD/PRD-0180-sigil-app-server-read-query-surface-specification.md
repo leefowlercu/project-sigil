@@ -13,7 +13,7 @@ CLI surfaces, but it must still share one underlying query implementation with
 
 The implemented app-server read plane now exposes:
 
-- `run/list`
+- `runs/list`
 - `run/read`
 - `run/events/read`
 - `run/tree/read`
@@ -34,12 +34,12 @@ The implemented app-server read plane now exposes:
 
 - Defining live subscriptions or run execution control.
 - Defining a second app-server-only query implementation.
-- Defining remote filters beyond `run/list` limit and cursor support.
+- Defining remote filters beyond `runs/list` limit and cursor support.
 
 ## Read Contract
 
-- `run/list` MUST return paged run summaries ordered newest-first.
-- `run/list` MUST accept `limit` and `cursor` parameters from the first
+- `runs/list` MUST return paged run summaries ordered newest-first.
+- `runs/list` MUST accept `limit` and `cursor` parameters from the first
   implementation slice.
 - `run/read` MUST return one run-scoped projection payload without inlining
   large artifact bodies.
@@ -81,11 +81,11 @@ The implemented app-server read plane now exposes:
 
 ## Acceptance Scenarios
 
-### Scenario SCN-0000: Serves paged run list after initialize handshake on stdio
+### Scenario SCN-0000: Serves paged runs list after initialize handshake on stdio
 
 Given persisted runs exist in the configured app-server run directory  
 When a client completes `initialize` and `initialized` on the stdio transport  
-And the client requests `run/list` with `limit=1`  
+And the client requests `runs/list` with `limit=1`  
 Then the server returns one run item plus a stable `nextCursor`.
 
 ### Scenario SCN-0001: Serves run projection and canonical event history after initialize handshake on stdio
