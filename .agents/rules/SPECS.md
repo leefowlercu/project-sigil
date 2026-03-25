@@ -3,8 +3,10 @@
 ## Source of Truth
 
 - ADRs define architecture and tradeoffs.
-- PRDs define product behavior; Gherkin acceptance criteria are authoritative for expected outcomes.
-- Organize specs per subproject under `docs/<subproject>/ADR` and `docs/<subproject>/PRD`.
+- PRDs define product behavior; Gherkin acceptance criteria are authoritative
+  for expected outcomes.
+- Organize active specs under the owning subproject's `docs/<subproject>/ADR`
+  and `docs/<subproject>/PRD` trees.
 
 ## Update Order
 
@@ -14,7 +16,8 @@
 
 ## Consistency
 
-- Keep terminology consistent across `README.md`, ADRs, PRDs, and submodule docs.
+- Keep terminology consistent across `README.md`, ADRs, PRDs, and submodule
+  docs.
 - Prefer concrete, testable acceptance language over implementation detail.
 
 ## File Naming
@@ -31,18 +34,18 @@
 - Scenario IDs **MUST** use zero-padded 4-digit integers and be unique within a
   PRD.
 - Scenario IDs **MUST** increment from `SCN-0000` within each PRD.
-- PRD scenario titles **SHOULD** match the mapped acceptance scenario title exactly
-  to keep traceability mechanical and reviewable.
+- PRD scenario titles **SHOULD** match the mapped acceptance scenario title
+  exactly to keep traceability mechanical and reviewable.
 - PRD scenario titles **SHOULD** be globally unique within a subproject so
   title-based traceability remains unambiguous.
-- When multiple PRDs touch the same behavior, exactly one PRD **SHOULD** own the
-  acceptance scenario and the others **SHOULD** reference that owner instead of
-  duplicating the scenario.
+- When multiple PRDs touch the same behavior, exactly one PRD **SHOULD** own
+  the acceptance scenario and the others **SHOULD** reference that owner
+  instead of duplicating the scenario.
 - Subproject `MATRIX.md` files **MUST** include a dedicated scenario ID column.
 - `MATRIX.md` scenario IDs **MUST** match PRD scenario IDs exactly for mapped
   scenarios.
-- `sigil` traceability map: `docs/sigil/PRD/MATRIX.md` -> `sigil/acceptance/features/harness.feature`.
-- `sigil-web` traceability map: `docs/sigil-web/PRD/MATRIX.md` -> `sigil-web/acceptance/features/web_ui.feature`.
+- `sigil` traceability map: `docs/sigil/PRD/MATRIX.md` ->
+  `sigil/acceptance/features/harness.feature`.
 - When behavior changes, update PRD acceptance criteria and the matching
   subproject traceability map before or alongside implementation updates.
 - Existing scenario IDs **SHOULD** remain stable over time; append new IDs

@@ -4,13 +4,12 @@ Superproject repository for the Siĝil harness ecosystem.
 
 ## Documentation Layout
 
-Specifications are organized by subproject:
+Active superproject specifications currently live under:
 
 - `docs/sigil/ADR` and `docs/sigil/PRD`
-- `docs/sigil-web/ADR` and `docs/sigil-web/PRD`
 
-Each subproject keeps ADRs (architecture), PRDs (behavior), and PRD acceptance
-traceability (`MATRIX.md`) together in its own docs tree.
+`docs/sigil-web/README.md` is currently a placeholder while the `sigil-web`
+specification and verification suite is rebuilt from a clean slate.
 
 ## Submodules
 
