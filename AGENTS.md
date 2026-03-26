@@ -1,10 +1,8 @@
 # AGENTS.md
 
 This superproject is the specification and governance layer for the Siĝil
-harness ecosystem. Active specifications currently live under `docs/sigil/`.
-The `sigil-web` docs tree is intentionally reset and kept as a placeholder
-until a new spec suite is introduced. Production implementations live in git
-submodules.
+harness ecosystem. Active specifications currently live under `docs/sigil/`
+and `docs/sigil-web/`. Production implementations live in git submodules.
 
 ## Table of Contents
 
@@ -45,6 +43,8 @@ submodules.
   reference the owner instead of duplicating acceptance criteria across PRDs.
 - `sigil`: [`docs/sigil/PRD/MATRIX.md`](docs/sigil/PRD/MATRIX.md) maps PRD
   scenarios to `sigil/acceptance/features/harness.feature`.
+- `sigil-web`: [`docs/sigil-web/PRD/MATRIX.md`](docs/sigil-web/PRD/MATRIX.md)
+  maps PRD scenarios to `sigil-web/acceptance/features/*.feature`.
 - PRD acceptance scenarios MUST include scenario IDs in the form `SCN-xxxx`
   (zero-padded, incrementing from `SCN-0000` within each PRD).
 - Matching `MATRIX` rows MUST include the same scenario IDs and keep a
@@ -60,6 +60,9 @@ submodules.
 - For `sigil` PRD work, follow the taxonomy and lifecycle rules in
   [`docs/sigil/PRD/README.md`](docs/sigil/PRD/README.md) and run
   `./scripts/verify-specs --subproject sigil` before concluding.
+- For `sigil-web` PRD work, follow the taxonomy and lifecycle rules in
+  [`docs/sigil-web/PRD/README.md`](docs/sigil-web/PRD/README.md) and run
+  `./scripts/verify-specs --subproject sigil-web` before concluding.
 
 ## Submodule Rules
 
@@ -83,8 +86,11 @@ submodules.
   [`docs/sigil/PRD/README.md`](docs/sigil/PRD/README.md)
 - Sigil acceptance traceability contract:
   [`docs/sigil/PRD/MATRIX.md`](docs/sigil/PRD/MATRIX.md)
-- Sigil PRD verifier: [`scripts/verify-specs`](scripts/verify-specs)
-- Sigil-web placeholder doc: [`docs/sigil-web/README.md`](docs/sigil-web/README.md)
+- PRD verifier: [`scripts/verify-specs`](scripts/verify-specs)
+- Sigil-web architecture decisions: [`docs/sigil-web/ADR`](docs/sigil-web/ADR)
+- Sigil-web product requirements: [`docs/sigil-web/PRD`](docs/sigil-web/PRD)
+- Sigil-web acceptance traceability contract:
+  [`docs/sigil-web/PRD/MATRIX.md`](docs/sigil-web/PRD/MATRIX.md)
 - Sigil submodule overview: [`sigil/README.md`](sigil/README.md)
 - Sigil submodule agent instructions (when present):
   [`sigil/AGENTS.md`](sigil/AGENTS.md)

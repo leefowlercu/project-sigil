@@ -15,6 +15,9 @@
 - For `docs/sigil/` PRD structural changes, numbering changes, or traceability
   edits, run `./scripts/verify-specs --subproject sigil` and treat failures as
   blockers.
+- For `docs/sigil-web/` PRD structural changes, numbering changes, or
+  traceability edits, run `./scripts/verify-specs --subproject sigil-web` and
+  treat failures as blockers.
 - When a PRD refactor splits or replaces records, verify the corresponding PRD
   README index/migration map, `MATRIX.md`, ADR related-document links, and
   mapped acceptance titles in the same change.

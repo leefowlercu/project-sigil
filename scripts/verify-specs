@@ -36,6 +36,7 @@ class SubprojectConfig:
 
 SUBPROJECTS = {
     "sigil": SubprojectConfig(prd_dir="docs/sigil/PRD"),
+    "sigil-web": SubprojectConfig(prd_dir="docs/sigil-web/PRD"),
 }
 
 

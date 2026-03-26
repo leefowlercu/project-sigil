@@ -7,9 +7,7 @@ Superproject repository for the Siĝil harness ecosystem.
 Active superproject specifications currently live under:
 
 - `docs/sigil/ADR` and `docs/sigil/PRD`
-
-`docs/sigil-web/README.md` is currently a placeholder while the `sigil-web`
-specification and verification suite is rebuilt from a clean slate.
+- `docs/sigil-web/ADR` and `docs/sigil-web/PRD`
 
 ## Submodules
 

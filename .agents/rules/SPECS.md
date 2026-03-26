@@ -46,6 +46,8 @@
   scenarios.
 - `sigil` traceability map: `docs/sigil/PRD/MATRIX.md` ->
   `sigil/acceptance/features/harness.feature`.
+- `sigil-web` traceability map: `docs/sigil-web/PRD/MATRIX.md` ->
+  `sigil-web/acceptance/features/*.feature`.
 - When behavior changes, update PRD acceptance criteria and the matching
   subproject traceability map before or alongside implementation updates.
 - Existing scenario IDs **SHOULD** remain stable over time; append new IDs

@@ -10,6 +10,3 @@ currently own an ADR/PRD suite. Those directories contain:
 
 - `docs/sigil/`
 - `docs/sigil-web/`
-
-`docs/sigil-web/` is currently a placeholder tree without active ADRs, PRDs, or
-acceptance traceability files.
