@@ -24,10 +24,13 @@ filtered before an operator drills into runs.
 
 - The root workspace MUST default to the first available agent when no valid
   `?agent=` search value is present.
-- The selected agent MUST be reflected through the `agent` search parameter in a
-  canonical, prefix-stripped form when possible.
-- Canonical selection resolution MUST accept either the raw agent ID or the
-  prefix-stripped value.
+- The selected agent MUST be reflected through the `agent` search parameter
+  using the exact canonical Agent Instance ID.
+- Canonical selection resolution MUST use the exact Agent Instance ID for a
+  visible agent.
+- Invalid or legacy `?agent=` values, including historical `agent_...` forms,
+  MUST fall back to the first available agent instead of resolving to a
+  selected agent.
 - Choosing a different agent card MUST update the selected workspace agent.
 
 ## Fleet Filter Contract
@@ -43,19 +46,22 @@ filtered before an operator drills into runs.
 
 ## Acceptance Scenarios
 
-### Scenario SCN-0000: Defaults the root workspace selection to the first available agent and reflects it in the agent search param
+### Scenario SCN-0000: Defaults the root workspace selection to the first available agent and reflects its canonical Agent Instance ID in the agent search param
 
 Given the root workspace has one or more visible agent cards  
 When a user opens `/` without an `agent` search parameter  
 Then the first available agent becomes selected and the hidden agent search
 value reflects that selection.
 
-### Scenario SCN-0001: Resolves canonical agent search values with or without the agent_ prefix
+### Scenario SCN-0001: Resolves exact canonical Agent Instance IDs and falls back when the agent search value is invalid or legacy
 
-Given the root workspace exposes an agent whose ID starts with `agent_`  
-When a user opens `/` with either the raw ID or the prefix-stripped `agent`
-search value  
-Then the same agent card is selected.
+Given the root workspace exposes one or more visible agent cards  
+When a user opens `/` with an `agent` search value that matches a visible
+agent's exact Agent Instance ID  
+Then that same agent card is selected  
+When a user opens `/` with an invalid or legacy `agent` search value for a
+different agent  
+Then the first available agent card becomes selected.
 
 ### Scenario SCN-0002: Updates root workspace selection when a different agent card is chosen
 

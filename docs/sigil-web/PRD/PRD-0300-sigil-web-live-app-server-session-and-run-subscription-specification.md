@@ -23,15 +23,21 @@ heartbeat activity, and updates the root workspace from live run notifications.
 
 ## Live Session Contract
 
-- Connecting a live endpoint MUST create a visible fleet record in the root
-  workspace.
+- Connecting a live endpoint MUST keep the pending session hidden from the
+  visible fleet until `initialize` succeeds and returns the real Agent Instance
+  ID.
 - A successful initialize handshake MUST transition the live agent session to
-  the ready state.
+  the ready state and surface a visible fleet record keyed by the exact Agent
+  Instance ID.
 - Missed heartbeats MUST transition the visible live session to degraded until
   the session reconnects or disconnects.
 - Reconnect from the root workspace MUST attempt to restore the live session.
 - Remove from the root workspace MUST delete the live session from the visible
   fleet.
+- When a newly initialized live session resolves to an Agent Instance ID that
+  is already visible in the fleet, `sigil-web` MUST reject the duplicate
+  connection, keep the current workspace selection unchanged, and surface a
+  warning toast to the operator.
 
 ## Live Runs Contract
 
@@ -42,11 +48,13 @@ heartbeat activity, and updates the root workspace from live run notifications.
 
 ## Acceptance Scenarios
 
-### Scenario SCN-0000: Connects a live agent endpoint and exposes a ready agent session in the fleet
+### Scenario SCN-0000: Connects a live agent endpoint only after initialize resolves a canonical Agent Instance ID
 
 Given `sigil-web` is running in live mode  
 When a user connects a reachable app-server WebSocket endpoint  
-Then the endpoint appears in the fleet and the session becomes ready after
+Then the endpoint stays hidden from the visible fleet until initialize
+completes  
+And the canonical live agent appears in the fleet and becomes ready after
 initialize.
 
 ### Scenario SCN-0001: Marks a live agent session degraded after missed heartbeats and recovers on reconnect
@@ -71,3 +79,12 @@ detail state.
 Given a live agent session is visible in the fleet  
 When a user removes that agent session  
 Then the fleet no longer shows the removed session.
+
+### Scenario SCN-0004: Rejects a duplicate live agent connection that resolves to an already-visible Agent Instance ID
+
+Given a live agent session is visible in the fleet  
+When a user connects another reachable app-server WebSocket endpoint whose
+initialize response returns the same Agent Instance ID  
+Then the fleet still shows only one visible agent with that Agent Instance ID  
+And the current workspace selection remains unchanged  
+And the operator sees a warning toast that the duplicate agent cannot be added.
