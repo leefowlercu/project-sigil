@@ -39,10 +39,10 @@ filtered before an operator drills into runs.
 - Filtering MUST only affect the visible fleet list; it MUST NOT mutate the
   underlying fleet state.
 
-## Deferred Contracts
+## Related Contracts
 
-- New-run authoring remains a visible affordance without an active behavior
-  contract.
+- New-run authoring behavior for the selected root workspace agent is defined
+  by `PRD-0220`.
 
 ## Acceptance Scenarios
 

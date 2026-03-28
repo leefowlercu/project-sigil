@@ -43,6 +43,8 @@ subproject.
   Agent workspace selection and fleet-management contract
 - [`PRD-0210-sigil-web-run-detail-workspace-specification.md`](PRD-0210-sigil-web-run-detail-workspace-specification.md):
   Root and standalone run-detail workspace contract
+- [`PRD-0220-sigil-web-new-run-dialog-specification.md`](PRD-0220-sigil-web-new-run-dialog-specification.md):
+  Selected-agent new-run dialog and live run-start contract
 - [`PRD-0300-sigil-web-live-app-server-session-and-run-subscription-specification.md`](PRD-0300-sigil-web-live-app-server-session-and-run-subscription-specification.md):
   Live session and run-subscription contract
 
