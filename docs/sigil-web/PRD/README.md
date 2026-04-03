@@ -45,6 +45,9 @@ subproject.
   Root and standalone run-detail workspace contract
 - [`PRD-0220-sigil-web-new-run-dialog-specification.md`](PRD-0220-sigil-web-new-run-dialog-specification.md):
   Selected-agent new-run dialog and live run-start contract
+- [`PRD-0230-sigil-web-run-detail-page-steps-pane-specification.md`](PRD-0230-sigil-web-run-detail-page-steps-pane-specification.md):
+  Standalone run-detail page Steps Pane rendering, indentation, and live update
+  contract
 - [`PRD-0300-sigil-web-live-app-server-session-and-run-subscription-specification.md`](PRD-0300-sigil-web-live-app-server-session-and-run-subscription-specification.md):
   Live session and run-subscription contract
 
