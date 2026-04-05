@@ -17,14 +17,14 @@ behavior can be expanded safely.
 ## Goals
 
 - Define the shared application shell contract across the current route surface.
-- Define the current standalone run-detail placeholder surface without
-  inventing future behavior.
+- Define the standalone run-detail route surface contract including live agent
+  session support via query parameter.
 
 ## Non-Goals
 
 - Defining root workspace selection behavior.
 - Defining live app-server session behavior.
-- Defining future standalone run-detail functionality beyond the placeholder.
+- Defining run-detail step inspection content (see PRD-0240).
 
 ## Shared Shell Contract
 
@@ -37,15 +37,12 @@ behavior can be expanded safely.
 ## Route Surface Contract
 
 - `/` MUST render the root agent workspace within the shared shell.
-- `/runs/$runId` MUST render a standalone workspace container within the shared
-  shell.
-- The standalone `/runs/$runId` route remains a placeholder until a future PRD
-  replaces that contract.
-
-## Deferred Contracts
-
-- The standalone `/runs/$runId` route does not yet define tab content,
-  projection loading, or interactive run controls.
+- `/runs/$runId` MUST render the standalone run-detail workspace within the
+  shared shell.
+- The standalone `/runs/$runId` route MUST accept an optional `agent` query
+  parameter to identify the live agent session for run data.
+- The `Open Detail` affordance on the root workspace MUST navigate to
+  `/runs/$runId?agent=$agentId` for the selected run.
 
 ## Acceptance Scenarios
 
@@ -62,9 +59,9 @@ Given a user opens `/runs/$runId` in `sigil-web`
 When the standalone route renders  
 Then the page still exposes `app-shell` and `app-shell-main`.
 
-### Scenario SCN-0002: Exposes the standalone run-detail route as a placeholder workspace frame
+### Scenario SCN-0002: Renders the standalone run-detail workspace with the agent query parameter
 
-Given a user opens `/runs/$runId` in `sigil-web`  
-When the standalone route renders  
-Then the route exposes the current placeholder workspace frame and scroll
-region without additional run-detail content.
+Given the root workspace shows embedded run detail for a selected run  
+When a user activates `Open Detail`  
+Then the browser navigates to `/runs/$runId` with the agent query parameter
+identifying the live agent session.
