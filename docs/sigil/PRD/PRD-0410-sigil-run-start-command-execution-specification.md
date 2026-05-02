@@ -94,6 +94,10 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
 
 - Root `decision=final` with non-empty answer and resolvable `final.evidence[]`
   refs MUST complete run successfully.
+- When a completed root continue action uses recursive subcalls and emits a
+  canonical `FINAL_ANSWER_START` / `FINAL_ANSWER_END` answer block with
+  complete reducer coverage evidence for all recursive subcalls, harness MUST
+  accept that marked answer without forcing an additional local reducer step.
 - Run-level accounting exposure semantics MUST follow `PRD-0510`.
 
 ### Blocking Text Output Contract
@@ -288,3 +292,10 @@ start`
 When text-mode progress is rendered  
 Then stdout includes fallback subcall progress showing the fallback execution
 mode.
+
+### Scenario SCN-0019: Completes run from marked recursive-map reducer output without another inference turn
+
+Given a root recursive-map action emits complete marked final-answer output  
+When harness evaluates marked recursive-map reducer output  
+Then run completes using the marked reducer final answer  
+And no additional root inference turn is requested.
