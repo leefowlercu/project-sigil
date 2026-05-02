@@ -38,7 +38,7 @@ behavior is defined in `PRD-0440`. Guardrail behavior is defined in `PRD-0500`.
 
 ## Canonical Terminology
 
-- `step`: one node-local decision cycle
+- `step`: one action-backed node-local decision cycle
 - `turn`: one transcript contribution linked to a step
 - `action`: one executable instruction emitted by a `continue` decision
 - `root node`: the node created at depth `0` when run execution begins
@@ -50,8 +50,11 @@ behavior is defined in `PRD-0440`. Guardrail behavior is defined in `PRD-0500`.
 - Each active node MUST run a control loop that requests structured inference with `schema_id=sigil.rlm.response.v1`.
 - Node steps MUST interpret `validated_payload.decision` as follows:
   - `continue`: execute continuation behavior for that node
-  - `final`: complete that node with `validated_payload.final.answer`
-- Root-node `final` MUST terminate the run as successful completion.
+  - `final`: out of contract
+- Nodes MUST complete only when a completed action emits canonical marked
+  final-answer output.
+- Root-node marked final-answer action output MUST terminate the run as
+  successful completion.
 
 ## Execution Profile Contract
 
@@ -64,6 +67,8 @@ behavior is defined in `PRD-0440`. Guardrail behavior is defined in `PRD-0500`.
 
 - `decision=continue` MUST carry exactly one executable action in `continuation.repl_code`.
 - Harness MUST execute exactly one continuation action per `continue` step.
+- Harness MUST reject `decision=final`; finalization belongs inside the action
+  output contract.
 - If the continuation payload is structurally invalid, harness progression MUST fail with typed output-validation behavior.
 - Detailed REPL runtime behavior is defined in `PRD-0430`.
 
@@ -74,11 +79,13 @@ behavior is defined in `PRD-0440`. Guardrail behavior is defined in `PRD-0500`.
 - Child node depth MUST be `parent_depth + 1`.
 - In recursive profile, depth-limit overflow MUST fall back to plain subcall behavior rather than creating a child node.
 - In non-recursive profile, recursive subcall APIs remain bound but MUST return typed depth-limit behavior for all invocations.
-- Successful child-node `final` output MUST be returned to the caller REPL context.
+- Successful child-node marked final-answer action output MUST be returned to
+  the caller REPL context.
 
 ## Completion and Failure Contract
 
-- Run completion MUST require root-node `decision=final` with non-empty `final.answer`.
+- Run completion MUST require root-node marked final-answer action output with a
+  non-empty answer.
 - Final-answer evidence validation follows `PRD-0310`.
 - Unrecoverable inference, REPL, or harness orchestration errors MUST terminate the run as `failed` with typed error metadata.
 - Child-node failures MUST propagate deterministic failure information to caller node context unless escalation policy terminates the run.
@@ -123,22 +130,22 @@ Given active parent node depth equals `rlm.max_depth` in recursive profile
 When recursive subcall execution is requested  
 Then no child node is created and plain subcall behavior is returned.
 
-### Scenario SCN-0005: Returns child final answer to caller REPL context on successful recursive subcall
+### Scenario SCN-0005: Returns child marked final answer to caller REPL context on successful recursive subcall
 
 Given recursive child-node execution completes successfully  
-When the child node reaches `decision=final`  
-Then the child `final.answer` is returned to the caller REPL context.
+When the child node completes from marked final-answer action output  
+Then the child final answer is returned to the caller REPL context.
 
-### Scenario SCN-0006: Completes run when root node emits decision final with non-empty final answer
+### Scenario SCN-0006: Completes run when root action emits marked final-answer output
 
-Given the root node returns `decision=final` with non-empty `final.answer`  
-When harness processes the terminal decision  
+Given the root node action emits marked final-answer output with a non-empty answer  
+When harness processes the completed action  
 Then the run completes successfully.
 
-### Scenario SCN-0007: Defines step as one node-local decision cycle
+### Scenario SCN-0007: Defines step as one action-backed node-local decision cycle
 
 Given harness terminology is evaluated  
-When one node-local decision cycle is described  
+When one node-local action-backed cycle is described  
 Then that cycle is represented as one `step`.
 
 ### Scenario SCN-0008: Records turns as user or model transcript contributions linked to a step
@@ -147,7 +154,7 @@ Given a node step executes
 When transcript contributions are persisted  
 Then turns are recorded as `user` or `model` contributions linked to that step.
 
-### Scenario SCN-0009: Limits continue steps to exactly one executable action
+### Scenario SCN-0009: Limits every completed step to exactly one executable action
 
 Given a node step returns `decision=continue`  
 When harness handles the decision  

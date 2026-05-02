@@ -24,7 +24,7 @@ and `previous_action_feedback` shape are defined in `PRD-0420`.
 ## Goals
 
 - Define the canonical structured response schemas used by harness inference.
-- Define evidence requirements for `decision=final`.
+- Define action-based final-answer evidence requirements.
 - Define plain-subcall answer schema ownership.
 - Define validation and persistence rules for final-answer evidence.
 
@@ -50,27 +50,17 @@ and `previous_action_feedback` shape are defined in `PRD-0420`.
 
 Top-level fields:
 
-- `decision` (required string enum): `continue`, `final`
-- `continuation` (optional object):
-  - `repl_code` (required, non-empty when `decision=continue`)
-  - `intent` (required, non-empty when `decision=continue`)
-  - `expected_observation` (required, non-empty when `decision=continue`)
-- `final` (optional object):
-  - `answer` (required, non-empty when `decision=final`)
-  - `evidence` (required array with at least one item when `decision=final`)
-  - `confidence` (optional enum: `low`, `medium`, `high`)
-
-Evidence item fields:
-
-- `ref` (required string, non-empty)
-- `chunk_id` (optional string)
-- `span_start` (optional integer `>= 0`)
-- `span_end` (optional integer `>= span_start` when both are present)
+- `decision` (required string enum): `continue`
+- `continuation` (required object):
+  - `repl_code` (required, non-empty)
+  - `intent` (required, non-empty)
+  - `expected_observation` (required, non-empty)
 
 Schema invariants:
 
-- `decision=continue` MUST include `continuation` and MUST NOT include `final`.
-- `decision=final` MUST include `final` and MUST NOT include `continuation`.
+- `decision=continue` MUST include `continuation`.
+- `final` MUST be absent.
+- `decision=final` is out of contract.
 - Unknown top-level or nested fields MUST fail strict schema validation.
 
 ## Structured Response Contract: `sigil.llm.answer.v1`
@@ -88,11 +78,14 @@ Schema invariants:
 
 ## Evidence Resolution Contract
 
-- `final.evidence[].ref` MUST resolve before node completion.
+- Final-answer evidence MUST come from the completed action artifact whose
+  output contained the accepted `FINAL_ANSWER_START` / `FINAL_ANSWER_END`
+  block.
 - Accepted canonical scheme in this release is:
   - `run-artifact://...`
-- When final evidence cites a prior action artifact surfaced via `previous_action_feedback.action_ref`, the cited ref MUST match the provided `action_ref` byte-for-byte.
-- If exact reuse of `previous_action_feedback.action_ref` is not possible, final evidence MUST cite `context_ref` instead of synthesizing a new artifact ref.
+- When REPL code cites or recovers prior action artifacts via
+  `previous_action_feedback.action_ref`, the cited ref MUST match the provided
+  `action_ref` byte-for-byte.
 - Unresolvable refs MUST fail finalization with typed output-validation behavior.
 
 ## Final Output Persistence Contract
@@ -100,14 +93,14 @@ Schema invariants:
 - Final-answer artifacts MUST persist:
   - `answer`
   - `evidence[]`
-  - optional `confidence`
 - `run.completed.final_answer_ref` continues to point at the persisted final-answer artifact.
 
 ## Compatibility Contract
 
-- Continue-step one-action-per-step behavior is unchanged.
+- Every completed step is a continue step with exactly one action.
 - Recursive and non-recursive execution profiles are unchanged.
-- Inference request `schema_id` remains `sigil.rlm.response.v1` after schema enrichment in this release.
+- Inference request `schema_id` remains `sigil.rlm.response.v1` after the
+  action-only schema change in this release.
 
 ## Deferred Contracts
 
@@ -130,11 +123,11 @@ Given an inference request references an unknown `schema_id`
 When schema resolution runs  
 Then request construction fails with typed schema-lookup behavior.
 
-### Scenario SCN-0002: Requires decision discriminator values continue or final in sigil.rlm.response.v1
+### Scenario SCN-0002: Requires action-only continue discriminator in sigil.rlm.response.v1
 
 Given a payload validated against `sigil.rlm.response.v1`  
 When strict schema validation runs  
-Then `decision` must be `continue` or `final`.
+Then `decision` must be `continue`.
 
 ### Scenario SCN-0003: Requires continuation intent expected_observation and repl_code in continue branch
 
@@ -149,28 +142,27 @@ Given an inference payload with `decision=continue`
 When strict schema validation runs  
 Then `continuation` is required and `final` is forbidden.
 
-### Scenario SCN-0005: Requires final answer evidence and optional confidence enum in final branch
+### Scenario SCN-0005: Rejects direct final decision payloads in sigil.rlm.response.v1
 
 Given an inference payload with `decision=final`  
 When strict schema validation runs  
-Then `final.answer` and `final.evidence` are required and
-`final.confidence` is optional with enum `low|medium|high`.
+Then the payload is rejected with typed output-validation behavior.
 
-### Scenario SCN-0006: Requires final branch and forbids continuation branch when decision is final
+### Scenario SCN-0006: Persists final-answer artifact from marked action output
 
-Given an inference payload with `decision=final`  
+Given a completed action emits a canonical marked final-answer block  
+When node finalization runs  
+Then final-answer persistence uses the completed action artifact as evidence.
+
+### Scenario SCN-0007: Forbids final branch fields in action-only RLM payloads
+
+Given an inference payload includes a top-level `final` field  
 When strict schema validation runs  
-Then `final` is required and `continuation` is forbidden.
+Then the payload is rejected with typed output-validation behavior.
 
-### Scenario SCN-0007: Restricts final confidence to enum low medium or high when present
+### Scenario SCN-0008: Rejects unknown fields under strict schema
 
-Given an inference payload with `decision=final` and `final.confidence` present  
-When strict schema validation runs  
-Then confidence is limited to `low`, `medium`, or `high`.
-
-### Scenario SCN-0008: Rejects unknown fields and malformed evidence entries under strict schema
-
-Given inference payload contains unknown fields or invalid evidence span data  
+Given inference payload contains unknown fields  
 When strict schema validation runs  
 Then the payload is rejected with typed output-validation behavior.
 
@@ -193,39 +185,39 @@ Given a step context with `context_ref` and a prior action with
 When evidence references are evaluated  
 Then those refs are canonical and resolvable.
 
-### Scenario SCN-0012: Validates final evidence references against run-local persisted artifacts before node completion
+### Scenario SCN-0012: Validates marked final-answer action evidence before node completion
 
-Given a final payload cites one or more evidence refs  
+Given a completed action emits a marked final-answer block  
 When node finalization runs  
-Then each evidence ref is validated against run-local persisted artifacts before completion.
+Then the action artifact evidence ref is validated before completion.
 
-### Scenario SCN-0013: Fails run with typed output-validation metadata when any final evidence reference cannot be resolved
+### Scenario SCN-0013: Fails run with typed output-validation metadata when marked final-answer evidence cannot be resolved
 
-Given a final payload cites an unresolvable evidence ref  
+Given marked final-answer evidence cannot be resolved  
 When node finalization runs  
 Then finalization fails with typed output-validation metadata.
 
-### Scenario SCN-0014: Accepts final evidence references for the canonical artifact scheme
+### Scenario SCN-0014: Accepts final-answer evidence references for the canonical artifact scheme
 
-Given a final payload cites canonical `run-artifact://...` refs  
+Given marked final-answer evidence uses canonical `run-artifact://...` refs  
 When evidence validation runs  
 Then that scheme is accepted.
 
-### Scenario SCN-0015: Persists enriched final-answer artifact with answer evidence and optional confidence
+### Scenario SCN-0015: Persists enriched final-answer artifact with answer and action evidence
 
-Given a final payload passes validation  
+Given marked action finalization passes validation  
 When final-answer persistence runs  
-Then the persisted artifact contains answer, evidence, and optional confidence.
+Then the persisted artifact contains answer and action evidence.
 
-### Scenario SCN-0016: Requires byte-for-byte previous_action_feedback.action_ref reuse with context_ref fallback for final evidence citations
+### Scenario SCN-0016: Requires byte-for-byte previous_action_feedback.action_ref reuse for action evidence recovery
 
-Given final evidence cites a prior action artifact  
+Given REPL code recovers a prior action artifact  
 When evidence refs are constructed or validated  
-Then `previous_action_feedback.action_ref` is reused byte-for-byte, or
-`context_ref` is used as fallback instead of synthesizing a new artifact ref.
+Then `previous_action_feedback.action_ref` is reused byte-for-byte instead of
+synthesizing a new artifact ref.
 
-### Scenario SCN-0017: Maintains inference schema_id sigil.rlm.response.v1 after schema extension
+### Scenario SCN-0017: Maintains inference schema_id sigil.rlm.response.v1 after action-only schema change
 
-Given the structured response contract is enriched within this release  
+Given the structured response contract becomes action-only within this release  
 When inference requests are built  
 Then the request `schema_id` remains `sigil.rlm.response.v1`.

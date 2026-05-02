@@ -153,16 +153,17 @@ Additional invariants:
 | Field | Required | Type | Invariants |
 | --- | --- | --- | --- |
 | `step_id` | Yes | UUIDv7 | Matches an earlier `node.step.started` for same node |
-| `decision` | Yes | string enum | One of: `continue`, `final` |
-| `action_count` | Yes | integer | `>= 0` |
+| `decision` | Yes | string enum | Must be `continue` |
+| `action_count` | Yes | integer | Must be `1` |
 | `duration_ms` | Yes | integer | `>= 0` |
 | `accounting` | Yes | object | MUST satisfy `AccountingRollup` defined in `PRD-0510` |
 | `accounting_ref` | Yes | string | Non-empty canonical accounting artifact reference as defined in `PRD-0510` |
 
 Additional invariants:
 
-- `decision=continue` => `action_count == 1` in v1.
-- `decision=final` => `action_count == 0`.
+- Every completed step is action-backed in v1.
+- `decision=continue` => `action_count == 1`.
+- `decision=final` is out of contract.
 
 ### `node.turn.user` payload schema
 

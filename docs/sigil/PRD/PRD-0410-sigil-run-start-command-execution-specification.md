@@ -85,19 +85,21 @@ For each step, harness MUST emit canonical events and maintain strict ordering:
 1. `node.step.started`
 2. `node.turn.user`
 3. `node.turn.model`
-4. zero or more `node.subcall.executed` (continue steps only when subcalls
-   occur)
-5. `node.action.executed` (continue steps only)
+4. zero or more `node.subcall.executed` when subcalls occur
+5. `node.action.executed`
 6. `node.step.completed`
 
 ## Completion and Output Contract
 
-- Root `decision=final` with non-empty answer and resolvable `final.evidence[]`
-  refs MUST complete run successfully.
-- When a completed root continue action uses recursive subcalls and emits a
-  canonical `FINAL_ANSWER_START` / `FINAL_ANSWER_END` answer block with
-  complete reducer coverage evidence for all recursive subcalls, harness MUST
-  accept that marked answer without forcing an additional local reducer step.
+- Harness MUST only complete nodes from completed action output. Direct
+  model-only `decision=final` steps are out of contract.
+- When a completed action emits a canonical `FINAL_ANSWER_START` /
+  `FINAL_ANSWER_END` answer block, harness MUST accept that marked answer as
+  the node final answer and use the action artifact as terminal evidence.
+- When a completed root action uses recursive subcalls and emits a canonical
+  marked answer block with complete reducer coverage evidence for all recursive
+  subcalls, harness MUST accept that marked answer without forcing an
+  additional local reducer step.
 - Run-level accounting exposure semantics MUST follow `PRD-0510`.
 
 ### Blocking Text Output Contract
@@ -199,11 +201,12 @@ variables
 When strict template rendering executes  
 Then command fails with typed template render error behavior.
 
-### Scenario SCN-0005: Executes multi-step decision loop until root terminal decision
+### Scenario SCN-0005: Executes multi-step action loop until root action finalizes
 
 Given harness execution is active for the root node  
-When model responses continue returning step decisions  
-Then harness continues step execution until root emits terminal final decision.
+When model responses continue returning action steps  
+Then harness continues step execution until a root action emits marked final
+answer output.
 
 ### Scenario SCN-0006: Persists per-step user and model turns and emits node turn events
 
@@ -242,11 +245,10 @@ Given `rlm.enabled=false` with an active node-local REPL session
 When REPL code calls `rlm_query`  
 Then typed depth-limit error is returned for the call.
 
-### Scenario SCN-0012: Completes run on root final answer and sets run.completed.final_answer_ref
+### Scenario SCN-0012: Completes run from marked final-answer action and sets run.completed.final_answer_ref
 
-Given root node emits `decision=final` with non-empty answer  
-And final evidence references resolve successfully  
-When harness finalization executes  
+Given a root action emits marked final-answer output  
+When harness evaluates marked action output  
 Then run completes and `run.completed.final_answer_ref` is set.
 
 ### Scenario SCN-0013: Prints human-readable run progress and terminal summary by default
@@ -293,7 +295,7 @@ When text-mode progress is rendered
 Then stdout includes fallback subcall progress showing the fallback execution
 mode.
 
-### Scenario SCN-0019: Completes run from marked recursive-map reducer output without another inference turn
+### Scenario SCN-0019: Completes run from marked recursive-map reducer action without another inference turn
 
 Given a root recursive-map action emits complete marked final-answer output  
 When harness evaluates marked recursive-map reducer output  
