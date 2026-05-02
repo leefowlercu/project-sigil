@@ -7,18 +7,19 @@ Accepted
 ## Context
 
 The standalone `/runs/$runId` route renders a Steps Pane (PRD-0230) in the left
-sidebar. The right content area is currently empty. Operators need to select an
-individual step and inspect its metadata, accounting, executed code, and action
-output within the run-detail page.
+sidebar. Operators need to select an individual step and inspect its metadata,
+executed code, action output, and accounting within the run-detail page.
 
 ## Goals
 
 - Define the step selection contract between the Steps Pane and the right
   content area.
-- Define the Step Context Pane header contract for step metadata, accounting,
-  and action pagination.
+- Define the Step Context Pane header contract for step metadata and action
+  pagination.
 - Define the Code Pane contract for syntax-highlighted action source display.
 - Define the Action Output Pane contract for action execution results.
+- Define the Accounting Drawer contract for run-level and selected-step
+  accounting artifacts.
 - Define the empty state when the selected step has no actions.
 
 ## Non-Goals
@@ -39,12 +40,27 @@ output within the run-detail page.
 
 - The Step Context Pane MUST display the step number, node ID, status, and
   duration.
-- The Step Context Pane MUST display step-level accounting when available,
-  including token counts and cost.
 - When the selected step has more than one action, the Step Context Pane MUST
   display an action pagination control to navigate between actions.
 - When the selected step has zero or one action, no pagination control is
   displayed.
+
+## Accounting Drawer Contract
+
+- When run-level accounting is available, the run-detail page MUST display an
+  expanded bottom Accounting Drawer below the code and output panes.
+- When selected-step accounting is available, the Accounting Drawer MUST display
+  selected-step totals beside the run totals.
+- The Accounting Drawer MUST display token counts, reasoning token counts, known
+  cost, token status, cost status, accounting source, provider/model pricing
+  key, and pricing version when those fields are available.
+- The Accounting Drawer MUST preserve the code and output pane split above it
+  and MUST be collapsible so operators can reclaim vertical inspection space.
+- The Accounting Drawer content MUST be contained within a bounded scroll area
+  so expanded accounting details never escape the viewport-constrained
+  application shell.
+- When either run-level or selected-step accounting is unavailable, the drawer
+  MUST show the unavailable scope without fabricating accounting values.
 
 ## Code Pane Contract
 
@@ -87,12 +103,12 @@ Given the standalone run-detail page is open for a completed run
 When no step is selected in the Steps Pane  
 Then the right content area displays an empty step-selection prompt.
 
-### Scenario SCN-0002: Displays step metadata and accounting in the Step Context Pane
+### Scenario SCN-0002: Displays selected step metadata in the Step Context Pane
 
 Given a step is selected in the standalone run-detail page  
 When the Step Context Pane renders  
-Then the Step Context Pane displays the step number, node ID, status, duration,
-and available accounting information.
+Then the Step Context Pane displays the step number, node ID, status, and
+duration.
 
 ### Scenario SCN-0003: Displays action pagination when the selected step has multiple actions
 
@@ -142,3 +158,10 @@ Given the standalone run-detail page is open for an in-progress run
 When the selected step transitions from running to completed  
 Then the Step Context Pane updates to reflect the completed status and final
 duration.
+
+### Scenario SCN-0010: Displays run and selected-step accounting in the bottom drawer when available
+
+Given a step with accounting is selected in the standalone run-detail page  
+When the Accounting Drawer renders  
+Then the Accounting Drawer displays run-level totals and selected-step totals
+within a bounded scroll area.
